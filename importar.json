@@ -1,0 +1,86 @@
+{
+  "empresas": {
+    "universo_acai": {
+      "email_dono": "admin@universoacai.com",
+      "dados": {
+        "nome": "Universo Açaí",
+        "status": "aberto",
+        "logo_url": "imagens_acai/logo-universo.png",
+        "horarios": {
+          "inicio": 14,
+          "fim": 23
+        }
+      },
+      "pedidos": {},
+      "cardapio": {
+        "sabores": {
+          "s1": { "nome": "Açai", "imagem": "sabores_acai/açai.png", "disponivel": true },
+          "s2": { "nome": "Morango", "imagem": "sabores_acai/morango.png", "disponivel": true },
+          "s3": { "nome": "Cupuaçu", "imagem": "sabores_acai/cupuaçu.png", "disponivel": true },
+          "s4": { "nome": "Creme de Abacaxi", "imagem": "sabores_acai/abacaxi_creme.png", "disponivel": true },
+          "s5": { "nome": "Sorvete de Abacaxi", "imagem": "sabores_acai/abacaxi_sorvete.png", "disponivel": true },
+          "s6": { "nome": "Sorvete de Beijinho", "imagem": "sabores_acai/beijinho.png", "disponivel": true },
+          "s7": { "nome": "Sorvete Belga", "imagem": "sabores_acai/belga.png", "disponivel": true },
+          "s8": { "nome": "Sorvete de Chocolate", "imagem": "sabores_acai/chocolate.png", "disponivel": true },
+          "s9": { "nome": "Creme de Maracujá", "imagem": "sabores_acai/maracuja.png", "disponivel": true },
+          "s10": { "nome": "Creme de Morango", "imagem": "sabores_acai/morango.png", "disponivel": true },
+          "s11": { "nome": "Creme de Ninho", "imagem": "sabores_acai/ninho.png", "disponivel": true },
+          "s12": { "nome": "Creme de Ninho Trufado", "imagem": "sabores_acai/ninho_trufado.png", "disponivel": true },
+          "s13": { "nome": "Creme de Oreo", "imagem": "sabores_acai/oreo.png", "disponivel": true },
+          "s14": { "nome": "Creme de Ovomaltine", "imagem": "sabores_acai/ovomaltine.png", "disponivel": true },
+          "s15": { "nome": "Sorvete de Morango", "imagem": "sabores_acai/sorvete_morango.png", "disponivel": true },
+          "s16": { "nome": "Creme de Tapioca", "imagem": "sabores_acai/tapioca.png", "disponivel": true }
+        },
+        "recheios": {
+          "r1": { "nome": "Leite em Pó", "imagem": "recheios_acai/leite.png", "disponivel": true },
+          "r2": { "nome": "Leite Condensado", "imagem": "recheios_acai/leitecondensado.png", "disponivel": true },
+          "r3": { "nome": "Paçoca", "imagem": "recheios_acai/paçoca.png", "disponivel": true },
+          "r4": { "nome": "Granola", "imagem": "recheios_acai/granola.png", "disponivel": true },
+          "r5": { "nome": "Amendoim", "imagem": "recheios_acai/amendoim.png", "disponivel": true },
+          "r6": { "nome": "Flocos de Arroz", "imagem": "recheios_acai/arroz.png", "disponivel": true },
+          "r7": { "nome": "Avelã", "imagem": "recheios_acai/avela.png", "disponivel": true },
+          "r8": { "nome": "Banana", "imagem": "recheios_acai/banana.png", "disponivel": true },
+          "r9": { "nome": "Bis", "imagem": "recheios_acai/bis.png", "disponivel": true },
+          "r10": { "nome": "Castanha", "imagem": "recheios_acai/castanha.png", "disponivel": true },
+          "r11": { "nome": "Canudos Waffer", "imagem": "recheios_acai/canudos.png", "disponivel": true },
+          "r12": { "nome": "Chocoball", "imagem": "recheios_acai/chocoball.png", "disponivel": true },
+          "r13": { "nome": "Chocopower", "imagem": "recheios_acai/chocopower.png", "disponivel": true },
+          "r14": { "nome": "Cobertura de Abacaxi", "imagem": "recheios_acai/cobertura_abacaxi.png", "disponivel": true },
+          "r15": { "nome": "Cobertura de Açaí", "imagem": "recheios_acai/cobertura_acai.png", "disponivel": true },
+          "r16": { "nome": "Cobertura de Caramelo", "imagem": "recheios_acai/cobertura_caramelo.png", "disponivel": true },
+          "r17": { "nome": "Cobertura de Chocolate", "imagem": "recheios_acai/cobertura_chocolate.png", "disponivel": true },
+          "r18": { "nome": "Cobertura de Doce de Leite", "imagem": "recheios_acai/cobertura_doce_leite.png", "disponivel": true },
+          "r19": { "nome": "Cobertura de Kiwi", "imagem": "recheios_acai/cobertura_kiwi.png", "disponivel": true },
+          "r20": { "nome": "Cobertura de Maracujá", "imagem": "recheios_acai/cobertura_maracuja.png", "disponivel": true },
+          "r21": { "nome": "Cobertura de Morango", "imagem": "recheios_acai/cobertura_morango.png", "disponivel": true },
+          "r22": { "nome": "Cobertura de Uva", "imagem": "recheios_acai/cobertura_uva.png", "disponivel": true },
+          "r23": { "nome": "Coco Ralado", "imagem": "recheios_acai/coco.png", "disponivel": true },
+          "r24": { "nome": "Cookies", "imagem": "recheios_acai/cookies.png", "disponivel": true },
+          "r25": { "nome": "Gotas de Chocolate Branco", "imagem": "recheios_acai/gotasbranco.png", "disponivel": true },
+          "r26": { "nome": "Gotas de Chocolate", "imagem": "recheios_acai/gotaschocolate.png", "disponivel": true },
+          "r27": { "nome": "Granulado", "imagem": "recheios_acai/granulado.png", "disponivel": true },
+          "r28": { "nome": "Jujuba", "imagem": "recheios_acai/jujuba.png", "disponivel": true },
+          "r29": { "nome": "KitKat", "imagem": "recheios_acai/kitkat.png", "disponivel": true },
+          "r30": { "nome": "Farinha Láctea", "imagem": "recheios_acai/lactea.png", "disponivel": true },
+          "r31": { "nome": "Creme de Leitinho", "imagem": "recheios_acai/leitinho.png", "disponivel": true },
+          "r32": { "nome": "Marshmallow", "imagem": "recheios_acai/marsh.png", "disponivel": true },
+          "r33": { "nome": "Disquete", "imagem": "recheios_acai/mm.png", "disponivel": true },
+          "r34": { "nome": "Morango Fruta", "imagem": "recheios_acai/morango.png", "disponivel": true },
+          "r35": { "nome": "Ovomaltine", "imagem": "recheios_acai/ovomaltine.png", "disponivel": true },
+          "r36": { "nome": "Uva Fruta", "imagem": "recheios_acai/uva.png", "disponivel": true }
+        },
+        "adicionais": {
+          "a1": { "nome": "Nutella", "preco": 3, "imagem": "adds_acai/nutella.png", "disponivel": true },
+          "a2": { "nome": "Creme de Avelã", "preco": 1.5, "imagem": "adds_acai/avela.png", "disponivel": true },
+          "a3": { "nome": "Batom", "preco": 2, "imagem": "adds_acai/batom.png", "disponivel": true },
+          "a4": { "nome": "Castanha", "preco": 2.5, "imagem": "adds_acai/castanha.png", "disponivel": true },
+          "a5": { "nome": "Granola Extra", "preco": 1.5, "imagem": "adds_acai/granola.png", "disponivel": true },
+          "a6": { "nome": "KitKat", "preco": 5, "imagem": "adds_acai/kitkat.png", "disponivel": true },
+          "a7": { "nome": "Ouro Branco", "preco": 2.5, "imagem": "adds_acai/ouro.png", "disponivel": true },
+          "a8": { "nome": "Serenata de Amor", "preco": 2, "imagem": "adds_acai/serenata.png", "disponivel": true },
+          "a9": { "nome": "Sonho de Valsa", "preco": 2.5, "imagem": "adds_acai/valsa.png", "disponivel": true }
+        }
+      }
+    }
+  }
+}
