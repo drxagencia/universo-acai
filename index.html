@@ -467,6 +467,23 @@
                     this.estoque = { sabores: fmt(s), recheios: fmt(r), adicionais: fmt(a) };
                 } catch(e) { console.error(e); }
             }
+            
+            irParaTela(n) {
+    this.telaAtual = n;
+    
+    // Esconde todas as telas e mostra apenas a desejada
+    document.querySelectorAll('.step-container').forEach((el, idx) => {
+        el.classList.toggle('active', idx === n);
+    });
+
+    // Resolve o problema do carrinho sumir:
+    // Sempre que mudar de tela, ele executa a lógica de mostrar/esconder o botão
+    this.atualizarBotaoFlutuante();
+    
+    window.scrollTo(0, 0); // Volta para o topo da página
+}
+
+
 
             irParaTela(index) {
                 this.telaAtual = index;
@@ -494,27 +511,31 @@
             avancarTela() { if(this.telaAtual < 3) this.irParaTela(this.telaAtual + 1); }
             voltarTela() { if(this.telaAtual > 0) this.irParaTela(this.telaAtual - 1); }
 
-            abrirMontagem(id, nome, preco) {
-                if(nome.includes("Água") || nome.includes("Vitamina")) {
-                    if(confirm(`Deseja adicionar 1x ${nome} ao seu carrinho?`)) {
-                    this.carrinho.push({ produto: nome, total: preco, sabores:[], recheios:[], adicionais:[] }); 
-                    this.salvarCarrinho();
-                    this.mostrarToast(`${nome} adicionado!`);
-                    this.atualizarBotaoFlutuante();
-                    return;     
-                }
-            }
+abrirMontagem(id, nome, preco) {
+    const itensSimples = ["Água", "Vitamina", "Refrigerante", "Suco", "Cerveja"];
+    const ehSimples = itensSimples.some(termo => nome.includes(termo));
 
-                this.produtoEmMontagem = { id, nome, precoBase: preco };
-                document.getElementById('nome-produto-selecionado').innerText = nome;
-                
-                // PASSANDO OS LIMITES AQUI: Sabores(2), Recheios(7), Adicionais(Infinity)
-                this.renderOpcoes('lista-sabores', this.estoque.sabores, 'sabor', false, 2);
-                this.renderOpcoes('lista-recheios', this.estoque.recheios, 'recheio', false, 7);
-                this.renderOpcoes('lista-adicionais', this.estoque.adicionais, 'add', true, Infinity);
-                
-                this.irParaTela(1);
-            }
+    if (ehSimples) {
+        if (confirm(`Deseja adicionar 1x ${nome} ao seu carrinho?`)) {
+            this.carrinho.push({
+                produto: nome,
+                total: preco,
+                sabores: [],
+                recheios: [],
+                adicionais: []
+            });
+            this.salvarCarrinho();
+            this.mostrarToast(`${nome} adicionado!`);
+            this.atualizarBotaoFlutuante();
+        }
+        return; // IMPORTANTE: O return impede que o código abaixo (de montar açaí) execute
+    }
+
+    // Se não for item simples, abre a montagem normal
+    this.itemAtual = { produto: nome, total: preco, sabores: [], recheios: [], adicionais: [] };
+    this.irParaTela(1); // Usa a nova função aqui!
+    this.renderizarSabores();
+}
 
             // FUNÇÃO ATUALIZADA COM LÓGICA DE LIMITE
             renderOpcoes(divId, lista, tipo, comPreco=false, maxLimit=Infinity) {
@@ -717,13 +738,13 @@
                 setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
             }
             
-            atualizarBotaoFlutuante() {
+atualizarBotaoFlutuante() {
     const btn = document.getElementById('floating-cart');
-    // Agora ele aparece sempre que estiver na tela de seleção (tela 0)
-    if(this.telaAtual === 0) {
+    // O botão deve aparecer na tela 0, mesmo se o carrinho estiver vazio (conforme seu pedido anterior)
+    if (this.telaAtual === 0) {
         btn.classList.remove('hidden');
-        // Atualiza o texto para mostrar quantos itens tem (opcional, mas ajuda)
-        btn.innerHTML = `<i class="fas fa-shopping-cart"></i> Carrinho (${this.carrinho.length})`;
+        const qtd = this.carrinho.length;
+        btn.innerHTML = `<i class="fas fa-shopping-cart"></i> Carrinho (${qtd})`;
     } else {
         btn.classList.add('hidden');
     }
