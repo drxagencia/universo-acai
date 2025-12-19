@@ -496,12 +496,14 @@
 
             abrirMontagem(id, nome, preco) {
                 if(nome.includes("Água") || nome.includes("Vitamina")) {
-                    this.carrinho.push({ produto: nome, total: preco, sabores:[], recheios:[], adicionais:[] });
+                    if(confirm(`Deseja adicionar 1x ${nome} ao seu carrinho?`)) {
+                    this.carrinho.push({ produto: nome, total: preco, sabores:[], recheios:[], adicionais:[] }); 
                     this.salvarCarrinho();
                     this.mostrarToast(`${nome} adicionado!`);
                     this.atualizarBotaoFlutuante();
-                    return; 
+                    return;     
                 }
+            }
 
                 this.produtoEmMontagem = { id, nome, precoBase: preco };
                 document.getElementById('nome-produto-selecionado').innerText = nome;
@@ -663,7 +665,7 @@
                 // VALIDAÇÕES RIGOROSAS
                 let erros = [];
                 if(nome.length < 2) erros.push("Preencha seu nome");
-                if(zap.length < 8) erros.push("WhatsApp inválido (apenas números)");
+                if(zap.length < 8) erros.push("WhatsApp inválido, verifíque-o novamente, por favor!");
                 if(rua.length < 5) erros.push("Endereço muito curto");
                 if(!pagamento || pagamento === "") erros.push("Selecione a forma de pagamento");
 
@@ -716,15 +718,17 @@
             }
             
             atualizarBotaoFlutuante() {
-                const btn = document.getElementById('floating-cart');
-                if(this.telaAtual === 0 && this.carrinho.length > 0) {
-                    btn.classList.remove('hidden');
-                } else {
-                    btn.classList.add('hidden');
-                }
-            }
+    const btn = document.getElementById('floating-cart');
+    // Agora ele aparece sempre que estiver na tela de seleção (tela 0)
+    if(this.telaAtual === 0) {
+        btn.classList.remove('hidden');
+        // Atualiza o texto para mostrar quantos itens tem (opcional, mas ajuda)
+        btn.innerHTML = `<i class="fas fa-shopping-cart"></i> Carrinho (${this.carrinho.length})`;
+    } else {
+        btn.classList.add('hidden');
+    }
+}
         }
-
         window.verificarTroco = (val) => {
             const trocoInput = document.getElementById('cli-troco');
             const select = document.getElementById('cli-pagamento');

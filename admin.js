@@ -117,14 +117,24 @@ function renderizarPedidos() {
 
         // Renderiza itens
         let htmlItens = '';
-        if (p.itens) {
-            p.itens.forEach(item => {
-                htmlItens += `<div style="margin-bottom:5px; font-size:0.9rem; color:#ccc;">
-                   ${item.quantidade || 1}x <b>${item.produto}</b> <br>
-                   <small>${item.sabores ? Object.keys(item.sabores).join(', ') : ''}</small>
-                </div>`;
-            });
-        }
+if (p.itens) {
+    p.itens.forEach(item => {
+        // Formata os detalhes (sabores, recheios, adicionais)
+        const sabores = item.sabores && item.sabores.length > 0 ? `<b>Sabores:</b> ${item.sabores.join(', ')}` : '';
+        const recheios = item.recheios && item.recheios.length > 0 ? `<b>Recheios:</b> ${item.recheios.join(', ')}` : '';
+        const adds = item.adicionais && item.adicionais.length > 0 ? `<b>Extras:</b> ${item.adicionais.map(a => a.nome).join(', ')}` : '';
+
+        htmlItens += `
+            <div style="margin-bottom:12px; font-size:0.9rem; color:#eee; border-bottom: 1px solid #333; padding-bottom: 8px;">
+               <span style="color:var(--neon-blue)">●</span> 1x <b>${item.produto}</b> <br>
+               <div style="padding-left: 15px; margin-top: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
+                   ${sabores ? sabores + '<br>' : ''}
+                   ${recheios ? recheios + '<br>' : ''}
+                   ${adds}
+               </div>
+            </div>`;
+    });
+}
 
         // LÓGICA DOS BOTÕES (WORKFLOW)
         let botoesHtml = '';
