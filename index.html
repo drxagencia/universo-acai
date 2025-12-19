@@ -468,19 +468,21 @@
                 } catch(e) { console.error(e); }
             }
             
-            irParaTela(n) {
+irParaTela(n) {
     this.telaAtual = n;
     
-    // Esconde todas as telas e mostra apenas a desejada
     document.querySelectorAll('.step-container').forEach((el, idx) => {
         el.classList.toggle('active', idx === n);
     });
 
-    // Resolve o problema do carrinho sumir:
-    // Sempre que mudar de tela, ele executa a lógica de mostrar/esconder o botão
+    // PROTEÇÃO: Só tenta calcular o total se estivermos nas telas de montagem (1, 2 ou 3)
+    // E se o itemAtual já tiver sido definido.
+    if (n > 0 && n < 4 && this.itemAtual) {
+        this.calcTotalMontagem();
+    }
+
     this.atualizarBotaoFlutuante();
-    
-    window.scrollTo(0, 0); // Volta para o topo da página
+    window.scrollTo(0, 0);
 }
 
 
@@ -528,12 +530,22 @@ abrirMontagem(id, nome, preco) {
             this.mostrarToast(`${nome} adicionado!`);
             this.atualizarBotaoFlutuante();
         }
-        return; // IMPORTANTE: O return impede que o código abaixo (de montar açaí) execute
+        return;
     }
 
-    // Se não for item simples, abre a montagem normal
-    this.itemAtual = { produto: nome, total: preco, sabores: [], recheios: [], adicionais: [] };
-    this.irParaTela(1); // Usa a nova função aqui!
+    // PRIMEIRO: Define o item e o preço base (Isso evita o erro de 'null')
+    this.itemAtual = { 
+        id: id,
+        produto: nome, 
+        precoBase: preco, // Garanta que essa propriedade existe aqui
+        total: preco, 
+        sabores: [], 
+        recheios: [], 
+        adicionais: [] 
+    };
+
+    // DEPOIS: Muda de tela
+    this.irParaTela(1);
     this.renderizarSabores();
 }
 
