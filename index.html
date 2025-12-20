@@ -174,6 +174,32 @@
         /* ESTILO PARA QUANDO HÁ ERRO NO CAMPO */
         .input-error { border: 1px solid #ff4444 !important; background: #fff0f0 !important; }
 
+        /* MODAL CUSTOMIZADO */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+            backdrop-filter: blur(3px);
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal-box {
+            background: white; padding: 25px; border-radius: 20px;
+            width: 90%; max-width: 350px; text-align: center;
+            transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .modal-overlay.open .modal-box { transform: scale(1); }
+        .modal-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; color: var(--primary); }
+        .modal-msg { font-size: 1rem; color: #555; margin-bottom: 25px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .modal-btn {
+            padding: 10px 25px; border-radius: 50px; border: none; font-weight: 600; cursor: pointer; flex: 1;
+        }
+        .modal-btn-cancel { background: #f0f0f0; color: #555; }
+        .modal-btn-confirm { background: var(--primary); color: white; }
+
+
         /* RODAPÉ DE AÇÃO */
         .footer-action {
             position: fixed; bottom: 0; left: 0; width: 100%;
@@ -271,6 +297,18 @@
     <div id="loading-screen">
         <div class="spinner"></div>
         <div id="loading-text">Carregando Loja...</div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-title" id="modal-title">Título</div>
+            <div class="modal-msg" id="modal-msg">Mensagem de confirmação aqui.</div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="app.fecharModalConfirmacao()">Cancelar</button>
+                <button class="modal-btn modal-btn-confirm" id="modal-confirm-btn">Confirmar</button>
+            </div>
+        </div>
     </div>
 
     <header>
@@ -499,7 +537,8 @@
                 const ehSimples = itensSimples.some(termo => nome.includes(termo));
 
                 if (ehSimples) {
-                    if (confirm(`Deseja adicionar 1x ${nome} ao seu carrinho?`)) {
+                    // SUBSTITUIÇÃO: Lógica antiga com confirm() substituída pelo Modal Customizado
+                    this.mostrarModalConfirmacao(nome, `Deseja adicionar 1x ${nome} por R$ ${preco.toFixed(2)}?`, () => {
                         this.carrinho.push({
                             produto: nome,
                             total: preco,
@@ -510,7 +549,9 @@
                         this.salvarCarrinho();
                         this.mostrarToast(`${nome} adicionado!`);
                         this.atualizarBotaoFlutuante();
-                    }
+                        this.fecharModalConfirmacao();
+                        // Mantém na tela inicial (tela 0) por padrão
+                    });
                     return;
                 }
 
@@ -624,6 +665,22 @@
                 };
                 
                 const s = getItems('sabor');
+                
+                // =========================================================
+                // MODIFICAÇÃO: Validação Obrigatória de Sabores
+                // =========================================================
+                if(s.length === 0) {
+                    // Exibe alerta se nenhum sabor foi selecionado
+                    this.mostrarToast("⚠️ Selecione pelo menos 1 sabor!");
+                    // Highlight visual na área de sabores para chamar atenção
+                    const area = document.getElementById('area-sabores');
+                    area.style.border = "2px solid #ff4444";
+                    setTimeout(() => area.style.border = "none", 2000);
+                    // Rolagem suave até a área
+                    area.scrollIntoView({ behavior: 'smooth' });
+                    return; // Interrompe a função aqui
+                }
+
                 const r = getItems('recheio');
                 const a = getItems('add');
                 
@@ -640,8 +697,34 @@
                     });
                     this.salvarCarrinho();
                     this.mostrarToast("Item adicionado ao carrinho!");
-                    this.irParaTela(2);
+                    
+                    // =========================================================
+                    // MODIFICAÇÃO: Navegação para a Tela Inicial (Reset)
+                    // =========================================================
+                    // Antes ia para tela 2 (carrinho), agora volta para 0 (home)
+                    this.irParaTela(0); 
+                    
+                    // Garante atualização do botão flutuante já que voltamos pra Home
+                    this.atualizarBotaoFlutuante(); 
                 }
+            }
+
+            // NOVAS FUNÇÕES PARA O MODAL
+            mostrarModalConfirmacao(titulo, msg, callback) {
+                document.getElementById('modal-title').innerText = titulo;
+                document.getElementById('modal-msg').innerText = msg;
+                const btnConfirm = document.getElementById('modal-confirm-btn');
+                
+                // Remove listeners antigos para evitar duplicação
+                const newBtn = btnConfirm.cloneNode(true);
+                btnConfirm.parentNode.replaceChild(newBtn, btnConfirm);
+                
+                newBtn.onclick = callback;
+                document.getElementById('custom-modal').classList.add('open');
+            }
+
+            fecharModalConfirmacao() {
+                document.getElementById('custom-modal').classList.remove('open');
             }
 
             renderCarrinho() {
