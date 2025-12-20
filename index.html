@@ -338,9 +338,7 @@
                 <div class="section-title">Bebidas & Outros</div>
                 <div class="grid-produtos" id="grid-bebidas"></div>
                 
-                <button id="floating-cart" class="btn-action hidden" style="position: fixed; bottom: 20px; right: 20px; z-index: 90;" onclick="app.irParaTela(2)">
-                    <i class="fas fa-shopping-cart"></i> Ver Carrinho
-                </button>
+                <!-- CORREÇÃO 2: Botão movido para fora do slider-wrapper (ver final do body) para corrigir bug de position fixed -->
             </div>
 
             <div class="step-screen" id="step-2">
@@ -402,6 +400,11 @@
             </div>
         </div>
     </div>
+    
+    <!-- CORREÇÃO 2: Botão fora do slider para manter position:fixed correto durante transições -->
+    <button id="floating-cart" class="btn-action hidden" style="position: fixed; bottom: 20px; right: 20px; z-index: 250;" onclick="app.irParaTela(2)">
+        <i class="fas fa-shopping-cart"></i> Ver Carrinho
+    </button>
 
     <div id="footer-bar" class="footer-action hidden">
         <div style="display:flex; align-items:center;">
@@ -658,6 +661,13 @@
             }
 
             addCarrinho() {
+                // CORREÇÃO 1: Check de segurança para produtoEmMontagem
+                if (!this.produtoEmMontagem) {
+                    alert("Erro ao identificar produto. Tente novamente.");
+                    this.irParaTela(0);
+                    return;
+                }
+
                 const getItems = (t) => {
                     const arr = [];
                     document.querySelectorAll(`input[data-tipo="${t}"]:checked`).forEach(el => arr.push({ nome: el.dataset.nome, preco: parseFloat(el.dataset.preco) }));
@@ -684,29 +694,27 @@
                 const r = getItems('recheio');
                 const a = getItems('add');
                 
-                if (this.produtoEmMontagem) {
-                    let total = this.produtoEmMontagem.precoBase;
-                    a.forEach(i => total += i.preco);
+                let total = this.produtoEmMontagem.precoBase;
+                a.forEach(i => total += i.preco);
 
-                    this.carrinho.push({
-                        produto: this.produtoEmMontagem.nome,
-                        sabores: s.map(x=>x.nome),
-                        recheios: r.map(x=>x.nome),
-                        adicionais: a,
-                        total: total
-                    });
-                    this.salvarCarrinho();
-                    this.mostrarToast("Item adicionado ao carrinho!");
-                    
-                    // =========================================================
-                    // MODIFICAÇÃO: Navegação para a Tela Inicial (Reset)
-                    // =========================================================
-                    // Antes ia para tela 2 (carrinho), agora volta para 0 (home)
-                    this.irParaTela(0); 
-                    
-                    // Garante atualização do botão flutuante já que voltamos pra Home
-                    this.atualizarBotaoFlutuante(); 
-                }
+                this.carrinho.push({
+                    produto: this.produtoEmMontagem.nome,
+                    sabores: s.map(x=>x.nome),
+                    recheios: r.map(x=>x.nome),
+                    adicionais: a,
+                    total: total
+                });
+                this.salvarCarrinho();
+                this.mostrarToast("Item adicionado ao carrinho!");
+                
+                // =========================================================
+                // MODIFICAÇÃO: Navegação para a Tela Inicial (Reset)
+                // =========================================================
+                // Antes ia para tela 2 (carrinho), agora volta para 0 (home)
+                this.irParaTela(0); 
+                
+                // Garante atualização do botão flutuante já que voltamos pra Home
+                this.atualizarBotaoFlutuante(); 
             }
 
             // NOVAS FUNÇÕES PARA O MODAL
