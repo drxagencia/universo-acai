@@ -117,24 +117,24 @@ function renderizarPedidos() {
 
         // Renderiza itens
         let htmlItens = '';
-if (p.itens) {
-    p.itens.forEach(item => {
-        // Formata os detalhes (sabores, recheios, adicionais)
-        const sabores = item.sabores && item.sabores.length > 0 ? `<b>Sabores:</b> ${item.sabores.join(', ')}` : '';
-        const recheios = item.recheios && item.recheios.length > 0 ? `<b>Recheios:</b> ${item.recheios.join(', ')}` : '';
-        const adds = item.adicionais && item.adicionais.length > 0 ? `<b>Extras:</b> ${item.adicionais.map(a => a.nome).join(', ')}` : '';
+        if (p.itens) {
+            p.itens.forEach(item => {
+                // Formata os detalhes (sabores, recheios, adicionais)
+                const sabores = item.sabores && item.sabores.length > 0 ? `<b>Sabores:</b> ${item.sabores.join(', ')}` : '';
+                const recheios = item.recheios && item.recheios.length > 0 ? `<b>Recheios:</b> ${item.recheios.join(', ')}` : '';
+                const adds = item.adicionais && item.adicionais.length > 0 ? `<b>Extras:</b> ${item.adicionais.map(a => a.nome).join(', ')}` : '';
 
-        htmlItens += `
-            <div style="margin-bottom:12px; font-size:0.9rem; color:#eee; border-bottom: 1px solid #333; padding-bottom: 8px;">
-               <span style="color:var(--neon-blue)">●</span> 1x <b>${item.produto}</b> <br>
-               <div style="padding-left: 15px; margin-top: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
-                   ${sabores ? sabores + '<br>' : ''}
-                   ${recheios ? recheios + '<br>' : ''}
-                   ${adds}
-               </div>
-            </div>`;
-    });
-}
+                htmlItens += `
+                    <div style="margin-bottom:12px; font-size:0.9rem; color:#eee; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                    <span style="color:var(--neon-blue)">●</span> 1x <b>${item.produto}</b> <br>
+                    <div style="padding-left: 15px; margin-top: 4px; color: #bbb; font-size: 0.85rem; line-height: 1.4;">
+                        ${sabores ? sabores + '<br>' : ''}
+                        ${recheios ? recheios + '<br>' : ''}
+                        ${adds}
+                    </div>
+                    </div>`;
+            });
+        }
 
         // LÓGICA DOS BOTÕES (WORKFLOW)
         let botoesHtml = '';
@@ -167,17 +167,28 @@ if (p.itens) {
             botoesHtml = `<span style="color:var(--neon-red); font-size:0.8rem;">PEDIDO CANCELADO</span>`;
         }
 
+        // CORREÇÃO DE UI: Formatar endereço corretamente
+        let enderecoFormatado = 'Retirada/Sem endereço';
+        if (p.endereco && typeof p.endereco === 'object') {
+            enderecoFormatado = `${p.endereco.rua || ''}, ${p.endereco.bairro || ''} (${p.endereco.ref || ''})`;
+        } else if (typeof p.endereco === 'string') {
+            enderecoFormatado = p.endereco;
+        }
+
+        // CORREÇÃO DE UI: Usar o ID sequencial se existir, senão o hash
+        const idVisual = p.display_id ? p.display_id : `#${p.id.slice(-4)}`;
+
         const card = document.createElement('div');
         card.className = 'card-pedido';
         card.innerHTML = `
             <div class="card-header">
-                <span style="color:#fff">#${p.id.slice(-4)}</span>
+                <span style="color:#fff; font-size:1.2rem;">${idVisual}</span>
                 <span class="status ${classeStatus}">${p.status ? p.status.toUpperCase() : 'PENDENTE'}</span>
             </div>
             <div style="margin-bottom:10px; color: var(--neon-blue);">
                 <i class="fas fa-user"></i> ${p.cliente?.nome || 'Cliente'} <br>
                 <i class="fab fa-whatsapp"></i> ${p.cliente?.whatsapp || ''} <br>
-                <small style="color:#888;">${p.endereco || 'Retirada/Sem endereço'}</small>
+                <small style="color:#888;">${enderecoFormatado}</small>
             </div>
             <div style="background:#111; padding:10px; border-radius:5px; margin-bottom:10px;">${htmlItens}</div>
             

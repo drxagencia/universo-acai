@@ -426,7 +426,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get, child, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        // ADICIONADO: runTransaction para gerar IDs sequenciais
+        import { getDatabase, ref, get, child, push, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // =================================================================
         // ⚠️ API KEY AQUI !!! ⚠️
@@ -804,8 +805,28 @@
                 document.getElementById('loading-screen').style.opacity = '1';
 
                 let total = 0; this.carrinho.forEach(i => total += i.total);
+
+                // --- GERAÇÃO DE ID SEQUENCIAL DIÁRIO (#0001) ---
+                let displayId = "PENDENTE";
+                try {
+                    // Data chave para o contador (YYYYMMDD) - reseta diariamente pq a chave muda
+                    const today = new Date();
+                    const dateKey = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+                    const counterRef = ref(db, `empresas/${this.empresaId}/counters/${dateKey}`);
+                    
+                    const transactionResult = await runTransaction(counterRef, (currentVal) => {
+                        return (currentVal || 0) + 1;
+                    });
+                    
+                    const seqNum = transactionResult.snapshot.val();
+                    displayId = `#${String(seqNum).padStart(4, '0')}`;
+                } catch(e) {
+                    console.error("Erro ao gerar ID sequencial:", e);
+                    displayId = "#ERR";
+                }
                 
                 const pedido = {
+                    display_id: displayId, // Novo campo legível
                     data_hora: new Date().toLocaleString('pt-BR'),
                     cliente: { nome, whatsapp: zap },
                     endereco: { rua, bairro: document.getElementById('cli-bairro').value, ref: document.getElementById('cli-ref').value },
