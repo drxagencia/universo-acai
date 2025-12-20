@@ -266,130 +266,88 @@
 </head>
 <body>
 
-    <div id="toast-box"><i class="fas fa-check-circle"></i> Item adicionado ao carrinho!</div>
+    <div id="toast-box">Item adicionado!</div>
 
     <div id="loading-screen">
         <div class="spinner"></div>
         <div id="loading-text">Carregando Loja...</div>
     </div>
 
-    <header>
-        <div class="profile-container">
-            <img src="imagens_acai/logo-universo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1625/1625048.png'" alt="Logo" class="profile-logo">
-            <div class="profile-info">
-                <div class="profile-handle">
-                    <i class="fab fa-instagram insta-icon"></i> @universodoacai
-                </div>
-                <div class="status-badge">
-                    <span class="status-dot"></span> <span id="txt-status">Aberto agora</span>
-                </div>
-            </div>
-        </div>
+    <header style="padding: 20px; background: var(--primary); color: white; text-align: center;">
+        <h2>Universo do Açaí</h2>
     </header>
 
     <div id="app-container">
-        <div class="slider-wrapper" id="slider">
+        <div class="step-screen active" id="step-0">
+            <div class="section-title" style="padding: 15px; font-weight: bold;">Açaí no Isopor</div>
+            <div class="grid-produtos" id="grid-isopor"></div>
+
+            <div class="section-title" style="padding: 15px; font-weight: bold;">Açaí no Copo</div>
+            <div class="grid-produtos" id="grid-copo"></div>
+
+            <div class="section-title" style="padding: 15px; font-weight: bold;">Bebidas & Outros</div>
+            <div class="grid-produtos" id="grid-bebidas"></div>
             
-            <div class="step-screen" id="step-1">
-                <div class="section-title">Açaí no Isopor</div>
-                <div class="grid-produtos" id="grid-isopor"></div>
+            <button id="floating-cart" class="btn-action" style="position: fixed; bottom: 20px; right: 20px; z-index: 90; width: auto; border-radius: 50px; padding: 15px 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);" onclick="app.irParaTela(2)">
+                <i class="fas fa-shopping-cart"></i> Carrinho (0)
+            </button>
+        </div>
 
-                <div class="section-title">Açaí no Copo</div>
-                <div class="grid-produtos" id="grid-copo"></div>
+        <div class="step-screen" id="step-1">
+            <h2 id="nome-produto-selecionado">Montando</h2>
+            <div id="area-sabores" class="grupo-opcoes">
+                <div class="grupo-titulo">Sabores <span class="limit-badge">Até 2</span></div>
+                <div id="lista-sabores"></div>
+            </div>
+            <div id="area-recheios" class="grupo-opcoes">
+                <div class="grupo-titulo">Recheios <span class="limit-badge">Até 7</span></div>
+                <div id="lista-recheios"></div>
+            </div>
+            <div id="area-adicionais" class="grupo-opcoes">
+                <div class="grupo-titulo">Adicionais Pagos</div>
+                <div id="lista-adicionais"></div>
+            </div>
+        </div>
 
-                <div class="section-title">Bebidas & Outros</div>
-                <div class="grid-produtos" id="grid-bebidas"></div>
+        <div class="step-screen" id="step-2">
+            <div class="section-title">Resumo do Pedido</div>
+            <div id="lista-carrinho-final"></div>
+
+            <div class="form-checkout" style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <input type="text" id="cli-nome" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Seu Nome">
+                <input type="tel" id="cli-zap" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Seu WhatsApp (apenas números)" oninput="this.value = this.value.replace(/\D/g, '')" maxlength="15">
+                <input type="text" id="cli-rua" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Rua e Número">
+                <input type="text" id="cli-bairro" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Bairro">
                 
-                <button id="floating-cart" class="btn-action hidden" style="position: fixed; bottom: 20px; right: 20px; z-index: 90;" onclick="app.irParaTela(2)">
-                    <i class="fas fa-shopping-cart"></i> Ver Carrinho
-                </button>
+                <select id="cli-pagamento" onchange="verificarTroco(this.value)" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+                    <option value="" selected disabled>Forma de Pagamento</option>
+                    <option value="Pix">Pix</option>
+                    <option value="Cartão">Cartão</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                </select>
+                <input type="text" id="cli-troco" class="hidden" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px;" placeholder="Troco para quanto?">
             </div>
+        </div>
 
-            <div class="step-screen" id="step-2">
-                <div class="montagem-header">
-                    <h2 id="nome-produto-selecionado">Montando</h2>
-                    <p style="color: #888;">Escolha seus ingredientes</p>
-                </div>
-
-                <div id="area-sabores" class="grupo-opcoes">
-                    <div class="grupo-titulo">Sabores <span class="limit-badge">Até 2</span></div>
-                    <div id="lista-sabores"></div>
-                </div>
-
-                <div id="area-recheios" class="grupo-opcoes">
-                    <div class="grupo-titulo">Recheios Grátis <span class="limit-badge">Até 7</span></div>
-                    <div id="lista-recheios"></div>
-                </div>
-
-                <div id="area-adicionais" class="grupo-opcoes">
-                    <div class="grupo-titulo">Adicionais Pagos <span class="limit-badge">Ilimitado</span></div>
-                    <div id="lista-adicionais"></div>
-                </div>
-            </div>
-
-            <div class="step-screen" id="step-3">
-                <div class="section-title"><i class="fas fa-receipt"></i> Resumo do Pedido</div>
-                <div id="lista-carrinho-final"></div>
-
-                <div class="grupo-opcoes" style="margin-top: 20px; padding-top:20px; padding-bottom: 20px;">
-                    <div class="grupo-titulo" style="border:none; padding:0 0 10px 0;">Entrega</div>
-                    <div class="form-checkout">
-                        <input type="text" id="cli-nome" placeholder="Seu Nome">
-                        <input type="tel" id="cli-zap" placeholder="Seu WhatsApp (apenas números)" oninput="this.value = this.value.replace(/\D/g, '')" maxlength="15">
-                        <input type="text" id="cli-rua" placeholder="Rua e Número">
-                        <input type="text" id="cli-bairro" placeholder="Bairro">
-                        <input type="text" id="cli-ref" placeholder="Ponto de Referência">
-                    </div>
-                </div>
-
-                <div class="grupo-opcoes" style="padding-top:20px; padding-bottom: 20px;">
-                    <div class="grupo-titulo" style="border:none; padding:0 0 10px 0;">Pagamento</div>
-                    <div class="form-checkout">
-                        <select id="cli-pagamento" onchange="verificarTroco(this.value)">
-                            <option value="" selected disabled>Selecione o pagamento...</option>
-                            <option value="Pix">Pix (Chave CPF/Email)</option>
-                            <option value="Cartão">Cartão (Maquininha)</option>
-                            <option value="Dinheiro">Dinheiro</option>
-                        </select>
-                        <input type="text" id="cli-troco" class="hidden" placeholder="Troco para quanto?">
-                    </div>
-                </div>
-            </div>
-
-            <div class="step-screen" id="step-4" style="text-align: center; padding-top: 80px;">
-                <i class="fas fa-check-circle" style="font-size: 5rem; color: var(--accent); margin-bottom: 20px;"></i>
-                <h2 style="color: var(--primary);">Pedido Enviado!</h2>
-                <p style="color: #666;">Aguarde a confirmação no WhatsApp.</p>
-                <button class="btn-action" style="width:auto; margin: 30px auto; background: var(--primary); color: white;" onclick="location.reload()">Novo Pedido</button>
-            </div>
+        <div class="step-screen" id="step-3" style="text-align: center; padding-top: 50px;">
+            <i class="fas fa-check-circle" style="font-size: 5rem; color: var(--accent);"></i>
+            <h2>Pedido Enviado!</h2>
+            <button class="btn-action" style="margin-top: 20px;" onclick="location.reload()">Novo Pedido</button>
         </div>
     </div>
 
     <div id="footer-bar" class="footer-action hidden">
-        <div style="display:flex; align-items:center;">
-            <button id="btn-voltar" class="btn-back" onclick="app.voltarTela()"><i class="fas fa-chevron-left"></i></button>
-            <div class="footer-total">
-                <span>Total estimado</span>
-                <span class="total-value" id="total-display">R$ 0,00</span>
-            </div>
+        <button class="btn-back" onclick="app.voltarTela()" style="background: #eee; border: none; padding: 10px 20px; border-radius: 8px;"><i class="fas fa-chevron-left"></i></button>
+        <div class="footer-total">
+            <span id="total-display" style="font-weight: bold; font-size: 1.2rem; color: var(--primary);">R$ 0,00</span>
         </div>
-        <button id="btn-avancar" class="btn-action" onclick="app.avancarTela()">
-            <span>Avançar</span> <i class="fas fa-arrow-right"></i>
-        </button>
-    </div>
-
-    <div class="admin-footer">
-        <p>&copy; 2025 Universo do Açaí</p>
-        <span class="admin-lock" onclick="window.location.href='admin.html'"><i class="fas fa-lock"></i> v2.3</span>
+        <button id="btn-avancar" class="btn-action" style="width: auto; padding: 10px 25px;" onclick="app.avancarTela()">Avançar</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, get, child, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // =================================================================
-        // ⚠️ API KEY AQUI !!! ⚠️
-        // =================================================================
         const firebaseConfig = {
           apiKey: "AIzaSyCikTxSJLoSBJeGrNRugs1MvWxCohakwnI",
           authDomain: "database-anotador.firebaseapp.com",
@@ -397,8 +355,7 @@
           projectId: "database-anotador",
           storageBucket: "database-anotador.firebasestorage.app",
           messagingSenderId: "1026172295848",
-          appId: "1:1026172295848:web:b5193909feee24ac8d409d",
-          measurementId: "G-L1Z0YKXT9N"
+          appId: "1:1026172295848:web:b5193909feee24ac8d409d"
         };
 
         const appFirebase = initializeApp(firebaseConfig);
@@ -428,7 +385,7 @@
                 this.empresaId = "universo_acai";
                 this.carrinho = JSON.parse(localStorage.getItem('carrinho_v2')) || [];
                 this.telaAtual = 0;
-                this.produtoEmMontagem = null;
+                this.itemAtual = null; // Centralizado como itemAtual
                 this.estoque = { sabores: [], recheios: [], adicionais: [] };
             }
 
@@ -436,19 +393,16 @@
                 this.renderizarTelaInicial();
                 await this.buscarIngredientes();
                 this.atualizarBotaoFlutuante();
-                
-                document.getElementById('loading-screen').style.opacity = '0';
-                setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+                document.getElementById('loading-screen').style.display = 'none';
             }
 
             renderizarTelaInicial() {
                 const criarCard = (p) => `
                     <div class="card-produto" onclick="app.abrirMontagem('${p.id}', '${p.nome}', ${p.preco})">
-                        <img src="${p.img}" onerror="this.src='https://placehold.co/200x200?text=Foto'" alt="${p.nome}">
+                        <img src="${p.img}" alt="${p.nome}">
                         <h3>${p.nome}</h3>
                         <div class="price">R$ ${p.preco.toFixed(2)}</div>
-                    </div>
-                `;
+                    </div>`;
                 document.getElementById('grid-isopor').innerHTML = PRODUTOS.isopor.map(criarCard).join('');
                 document.getElementById('grid-copo').innerHTML = PRODUTOS.copo.map(criarCard).join('');
                 document.getElementById('grid-bebidas').innerHTML = PRODUTOS.bebidas.map(criarCard).join('');
@@ -462,164 +416,97 @@
                         get(child(dbRef, `${pathBase}/recheios`)),
                         get(child(dbRef, `${pathBase}/adicionais`))
                     ]);
-
                     const fmt = (snap) => snap.exists() ? Object.values(snap.val()).filter(i=>i.disponivel !== false) : [];
                     this.estoque = { sabores: fmt(s), recheios: fmt(r), adicionais: fmt(a) };
                 } catch(e) { console.error(e); }
             }
-            
-irParaTela(n) {
-    this.telaAtual = n;
-    
-    document.querySelectorAll('.step-container').forEach((el, idx) => {
-        el.classList.toggle('active', idx === n);
-    });
 
-    // PROTEÇÃO: Só tenta calcular o total se estivermos nas telas de montagem (1, 2 ou 3)
-    // E se o itemAtual já tiver sido definido.
-    if (n > 0 && n < 4 && this.itemAtual) {
-        this.calcTotalMontagem();
-    }
+            irParaTela(n) {
+                this.telaAtual = n;
+                document.querySelectorAll('.step-screen').forEach((el, idx) => {
+                    el.classList.toggle('active', idx === n);
+                });
 
-    this.atualizarBotaoFlutuante();
-    window.scrollTo(0, 0);
-}
-
-
-
-            irParaTela(index) {
-                this.telaAtual = index;
-                document.getElementById('slider').style.transform = `translateX(-${index * 25}%)`;
-                
                 const footer = document.getElementById('footer-bar');
-                if(index === 0 || index === 3) footer.classList.add('hidden');
+                if(n === 0 || n === 3) footer.classList.add('hidden');
                 else footer.classList.remove('hidden');
-                
-                this.atualizarBotaoFlutuante();
 
                 const btnAvancar = document.getElementById('btn-avancar');
-                if(index === 1) {
+                if(n === 1) {
                     btnAvancar.innerHTML = `<span>Adicionar</span> <i class="fas fa-plus"></i>`;
                     btnAvancar.onclick = () => this.addCarrinho();
-                    this.calcTotalMontagem(); // Recalcula pra validar limites na abertura
-                } else if(index === 2) {
+                    this.calcTotalMontagem(); 
+                } else if(n === 2) {
                     btnAvancar.innerHTML = `<span>Enviar Pedido</span> <i class="fab fa-whatsapp"></i>`;
                     btnAvancar.onclick = () => this.enviarPedido();
                     this.renderCarrinho();
                 }
-                document.querySelectorAll('.step-screen')[index].scrollTop = 0;
+
+                this.atualizarBotaoFlutuante();
+                window.scrollTo(0, 0);
             }
 
-            avancarTela() { if(this.telaAtual < 3) this.irParaTela(this.telaAtual + 1); }
-            voltarTela() { if(this.telaAtual > 0) this.irParaTela(this.telaAtual - 1); }
+            abrirMontagem(id, nome, preco) {
+                const itensSimples = ["Água", "Vitamina", "Refrigerante", "Suco", "Cerveja"];
+                const ehSimples = itensSimples.some(termo => nome.includes(termo));
 
-abrirMontagem(id, nome, preco) {
-    const itensSimples = ["Água", "Vitamina", "Refrigerante", "Suco", "Cerveja"];
-    const ehSimples = itensSimples.some(termo => nome.includes(termo));
+                if (ehSimples) {
+                    if (confirm(`Deseja adicionar 1x ${nome} ao seu carrinho?`)) {
+                        this.carrinho.push({ produto: nome, total: preco, sabores: [], recheios: [], adicionais: [] });
+                        this.salvarCarrinho();
+                        this.mostrarToast(`${nome} adicionado!`);
+                        this.atualizarBotaoFlutuante();
+                    }
+                    return;
+                }
 
-    if (ehSimples) {
-        if (confirm(`Deseja adicionar 1x ${nome} ao seu carrinho?`)) {
-            this.carrinho.push({
-                produto: nome,
-                total: preco,
-                sabores: [],
-                recheios: [],
-                adicionais: []
-            });
-            this.salvarCarrinho();
-            this.mostrarToast(`${nome} adicionado!`);
-            this.atualizarBotaoFlutuante();
-        }
-        return;
-    }
+                // INICIALIZA ANTES DE TUDO
+                this.itemAtual = { id, produto: nome, precoBase: preco, total: preco, sabores: [], recheios: [], adicionais: [] };
+                
+                document.getElementById('nome-produto-selecionado').innerText = nome;
+                this.renderOpcoes('lista-sabores', this.estoque.sabores, 'sabor', false, 2);
+                this.renderOpcoes('lista-recheios', this.estoque.recheios, 'recheio', false, 7);
+                this.renderOpcoes('lista-adicionais', this.estoque.adicionais, 'add', true);
 
-    // PRIMEIRO: Define o item e o preço base (Isso evita o erro de 'null')
-    this.itemAtual = { 
-        id: id,
-        produto: nome, 
-        precoBase: preco, // Garanta que essa propriedade existe aqui
-        total: preco, 
-        sabores: [], 
-        recheios: [], 
-        adicionais: [] 
-    };
+                this.irParaTela(1);
+            }
 
-    // DEPOIS: Muda de tela
-    this.irParaTela(1);
-    this.renderizarSabores();
-}
-
-            // FUNÇÃO ATUALIZADA COM LÓGICA DE LIMITE
-            renderOpcoes(divId, lista, tipo, comPreco=false, maxLimit=Infinity) {
+            renderOpcoes(divId, lista, tipo, comPreco, maxLimit = Infinity) {
                 const div = document.getElementById(divId);
-                div.innerHTML = '';
-                if(!lista.length) { div.innerHTML = '<p style="color:#999; padding:10px;">Indisponível no momento.</p>'; return; }
-
-                // Atributo data-limit no container pai para controle
-                div.setAttribute('data-limit-val', maxLimit);
-                div.setAttribute('data-type-group', tipo);
-
-                lista.forEach((item, idx) => {
-                    const uid = `${tipo}-${idx}`;
-                    const imgSrc = item.imagem ? item.imagem : 'https://cdn-icons-png.flaticon.com/512/1147/1147805.png';
-                    const precoTxt = comPreco ? `<span style="color:var(--primary); font-weight:bold;">+ R$ ${item.preco.toFixed(2)}</span>` : '';
-
-                    div.innerHTML += `
-                        <div class="opcao-item" id="row-${uid}">
-                            <div class="opcao-info">
-                                <label for="${uid}" class="chk-container">
-                                    <input type="checkbox" id="${uid}" class="chk-input"
-                                        data-tipo="${tipo}"
-                                        data-nome="${item.nome}"
-                                        data-preco="${item.preco || 0}"
-                                        onchange="app.calcTotalMontagem()">
-                                    <div class="chk-visual"></div>
-                                </label>
-                                <img src="${imgSrc}" class="opcao-img" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1147/1147805.png'">
-                                <span>${item.nome}</span>
-                            </div>
-                            ${precoTxt}
+                div.innerHTML = lista.map((item, idx) => `
+                    <div class="opcao-item" id="row-${tipo}-${idx}" style="display:flex; align-items:center; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <input type="checkbox" id="${tipo}-${idx}" 
+                                data-tipo="${tipo}" data-nome="${item.nome}" data-preco="${item.preco || 0}"
+                                onchange="app.calcTotalMontagem()">
+                            <span>${item.nome}</span>
                         </div>
-                    `;
-                });
+                        ${comPreco ? `<span style="color:var(--accent)">+ R$ ${item.preco.toFixed(2)}</span>` : ''}
+                    </div>
+                `).join('');
+                div.setAttribute('data-limit', maxLimit);
+                div.setAttribute('data-tipo-grupo', tipo);
             }
 
             calcTotalMontagem() {
-                if(this.telaAtual !== 1) return;
-                
-                // 1. Calcular total financeiro
+                if (!this.itemAtual || this.telaAtual !== 1) return;
+
                 let adds = 0;
                 document.querySelectorAll('input[data-tipo="add"]:checked').forEach(el => adds += parseFloat(el.dataset.preco));
-                const total = this.produtoEmMontagem.precoBase + adds;
+                const total = this.itemAtual.precoBase + adds;
                 document.getElementById('total-display').innerText = `R$ ${total.toFixed(2)}`;
 
-                // 2. Verificar Limites (Sabores e Recheios)
-                this.verificarLimiteGrupo('lista-sabores');
-                this.verificarLimiteGrupo('lista-recheios');
-            }
+                // Limites
+                ['lista-sabores', 'lista-recheios'].forEach(id => {
+                    const div = document.getElementById(id);
+                    const limit = parseInt(div.getAttribute('data-limit'));
+                    const tipo = div.getAttribute('data-tipo-grupo');
+                    const inputs = div.querySelectorAll('input');
+                    const marcados = Array.from(inputs).filter(i => i.checked).length;
 
-            verificarLimiteGrupo(divId) {
-                const div = document.getElementById(divId);
-                if(!div) return;
-                const limit = parseFloat(div.getAttribute('data-limit-val'));
-                const tipo = div.getAttribute('data-type-group');
-                
-                if(!limit || limit === Infinity) return;
-
-                const inputs = div.querySelectorAll(`input[data-tipo="${tipo}"]`);
-                const marcados = Array.from(inputs).filter(i => i.checked).length;
-
-                inputs.forEach(input => {
-                    const row = document.getElementById(`row-${input.id}`);
-                    if(!input.checked) {
-                        if(marcados >= limit) {
-                            input.disabled = true;
-                            if(row) row.classList.add('disabled-opt');
-                        } else {
-                            input.disabled = false;
-                            if(row) row.classList.remove('disabled-opt');
-                        }
-                    }
+                    inputs.forEach(i => {
+                        if (!i.checked) i.disabled = marcados >= limit;
+                    });
                 });
             }
 
@@ -633,51 +520,42 @@ abrirMontagem(id, nome, preco) {
                 const s = getItems('sabor');
                 const r = getItems('recheio');
                 const a = getItems('add');
-                let total = this.produtoEmMontagem.precoBase;
+                let total = this.itemAtual.precoBase;
                 a.forEach(i => total += i.preco);
 
                 this.carrinho.push({
-                    produto: this.produtoEmMontagem.nome,
+                    produto: this.itemAtual.produto,
                     sabores: s.map(x=>x.nome),
                     recheios: r.map(x=>x.nome),
                     adicionais: a,
                     total: total
                 });
+
                 this.salvarCarrinho();
-                this.mostrarToast("Item adicionado ao carrinho!");
+                this.mostrarToast("Item adicionado!");
                 this.irParaTela(2);
             }
 
             renderCarrinho() {
                 const div = document.getElementById('lista-carrinho-final');
                 if(!this.carrinho.length) {
-                    div.innerHTML = '<p style="text-align:center; padding:40px; color:#999;">Carrinho vazio.</p>';
+                    div.innerHTML = '<p style="text-align:center; padding:20px;">Carrinho vazio.</p>';
                     document.getElementById('total-display').innerText = 'R$ 0,00';
-                    document.getElementById('btn-avancar').disabled = true;
                     return;
                 }
                 
-                let html = '';
                 let totalGeral = 0;
-                this.carrinho.forEach((item, idx) => {
+                div.innerHTML = this.carrinho.map((item, idx) => {
                     totalGeral += item.total;
-                    let det = '';
-                    if(item.sabores.length) det += `<b>Sabores:</b> ${item.sabores.join(', ')}<br>`;
-                    if(item.recheios.length) det += `<b>Recheios:</b> ${item.recheios.join(', ')}<br>`;
-                    if(item.adicionais && item.adicionais.length) det += `<b>Adds:</b> ${item.adicionais.map(x=>x.nome).join(', ')}`;
-
-                    html += `
-                        <div class="cart-item">
-                            <button class="btn-remove" onclick="app.removeCarrinho(${idx})"><i class="fas fa-times"></i></button>
-                            <div class="cart-item-title">${item.produto}</div>
-                            <div class="cart-item-desc">${det}</div>
-                            <div style="text-align:right; font-weight:800; color:var(--primary); margin-top:5px;">R$ ${item.total.toFixed(2)}</div>
-                        </div>
-                    `;
-                });
-                div.innerHTML = html;
+                    return `
+                    <div style="background:white; padding:15px; border-radius:10px; margin-bottom:10px; position:relative;">
+                        <button onclick="app.removeCarrinho(${idx})" style="position:absolute; right:10px; top:10px; border:none; background:none; color:red;"><i class="fas fa-trash"></i></button>
+                        <strong>${item.produto}</strong><br>
+                        <small>${item.sabores.join(', ')} | ${item.recheios.join(', ')}</small><br>
+                        <span style="color:var(--primary); font-weight:bold;">R$ ${item.total.toFixed(2)}</span>
+                    </div>`;
+                }).join('');
                 document.getElementById('total-display').innerText = `R$ ${totalGeral.toFixed(2)}`;
-                document.getElementById('btn-avancar').disabled = false;
             }
 
             removeCarrinho(i) {
@@ -695,33 +573,18 @@ abrirMontagem(id, nome, preco) {
                 const rua = document.getElementById('cli-rua').value.trim();
                 const pagamento = document.getElementById('cli-pagamento').value;
 
-                // VALIDAÇÕES RIGOROSAS
-                let erros = [];
-                if(nome.length < 2) erros.push("Preencha seu nome");
-                if(zap.length < 8) erros.push("WhatsApp inválido, verifíque-o novamente, por favor!");
-                if(rua.length < 5) erros.push("Endereço muito curto");
-                if(!pagamento || pagamento === "") erros.push("Selecione a forma de pagamento");
-
-                if(erros.length > 0) {
-                    alert("Atenção:\n- " + erros.join("\n- "));
-                    // Destacar campos com erro (exemplo simples para pagamento)
-                    if(!pagamento) document.getElementById('cli-pagamento').classList.add('input-error');
+                if(nome.length < 2 || zap.length < 10 || rua.length < 5 || !pagamento) {
+                    alert("Por favor, preencha todos os campos corretamente. O WhatsApp deve ter DDD + Número.");
                     return;
                 }
 
-                // Remove erro visual se tiver
-                document.getElementById('cli-pagamento').classList.remove('input-error');
-
-                document.getElementById('loading-text').innerText = "Enviando...";
                 document.getElementById('loading-screen').style.display = 'flex';
-                document.getElementById('loading-screen').style.opacity = '1';
-
-                let total = 0; this.carrinho.forEach(i => total += i.total);
                 
+                const total = this.carrinho.reduce((acc, i) => acc + i.total, 0);
                 const pedido = {
                     data_hora: new Date().toLocaleString('pt-BR'),
                     cliente: { nome, whatsapp: zap },
-                    endereco: { rua, bairro: document.getElementById('cli-bairro').value, ref: document.getElementById('cli-ref').value },
+                    endereco: { rua, bairro: document.getElementById('cli-bairro').value },
                     pagamento: { metodo: pagamento, troco: document.getElementById('cli-troco').value },
                     itens: this.carrinho,
                     total_pedido: total.toFixed(2),
@@ -732,48 +595,35 @@ abrirMontagem(id, nome, preco) {
                     await push(ref(db, `empresas/${this.empresaId}/pedidos`), pedido);
                     this.carrinho = [];
                     this.salvarCarrinho();
-                    document.getElementById('loading-screen').style.display = 'none';
                     this.irParaTela(3);
-                } catch(e) {
-                    console.error(e);
-                    alert("Erro ao enviar. Tente novamente.");
-                    document.getElementById('loading-screen').style.display = 'none';
-                }
+                } catch(e) { alert("Erro ao enviar pedido."); }
+                document.getElementById('loading-screen').style.display = 'none';
             }
 
             salvarCarrinho() { localStorage.setItem('carrinho_v2', JSON.stringify(this.carrinho)); }
-            
-            mostrarToast(msg) {
+            mostrarToast(msg) { 
                 const x = document.getElementById("toast-box");
-                x.innerText = msg;
-                x.className = "show";
-                setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+                x.innerText = msg; x.classList.add("show");
+                setTimeout(() => x.classList.remove("show"), 3000);
             }
-            
-atualizarBotaoFlutuante() {
-    const btn = document.getElementById('floating-cart');
-    // O botão deve aparecer na tela 0, mesmo se o carrinho estiver vazio (conforme seu pedido anterior)
-    if (this.telaAtual === 0) {
-        btn.classList.remove('hidden');
-        const qtd = this.carrinho.length;
-        btn.innerHTML = `<i class="fas fa-shopping-cart"></i> Carrinho (${qtd})`;
-    } else {
-        btn.classList.add('hidden');
-    }
-}
+            atualizarBotaoFlutuante() {
+                const btn = document.getElementById('floating-cart');
+                if (this.telaAtual === 0) {
+                    btn.classList.remove('hidden');
+                    btn.innerHTML = `<i class="fas fa-shopping-cart"></i> Carrinho (${this.carrinho.length})`;
+                } else btn.classList.add('hidden');
+            }
+            voltarTela() { this.irParaTela(this.telaAtual - 1); }
+            avancarTela() { this.irParaTela(this.telaAtual + 1); }
         }
+
         window.verificarTroco = (val) => {
-            const trocoInput = document.getElementById('cli-troco');
-            const select = document.getElementById('cli-pagamento');
-            select.classList.remove('input-error'); // Limpa erro ao selecionar
-            
-            trocoInput.classList.toggle('hidden', val !== 'Dinheiro');
+            document.getElementById('cli-troco').classList.toggle('hidden', val !== 'Dinheiro');
         };
 
         const app = new AppController();
         window.app = app;
         document.addEventListener('DOMContentLoaded', () => app.init());
-
     </script>
 </body>
 </html>
