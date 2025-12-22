@@ -42,6 +42,27 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+
+    function toggleSenha() {
+        const inputSenha = document.getElementById('login-senha');
+        const iconSenha = document.getElementById('btn-ver-senha');
+
+        if (inputSenha.type === "password") {
+            // Mostra a senha
+            inputSenha.type = "text";
+            // Troca o ícone para "olho cortado" (fa-eye-slash)
+            iconSenha.classList.remove('fa-eye');
+            iconSenha.classList.add('fa-eye-slash');
+        } else {
+            // Oculta a senha
+            inputSenha.type = "password";
+            // Troca o ícone volta para "olho" (fa-eye)
+            iconSenha.classList.remove('fa-eye-slash');
+            iconSenha.classList.add('fa-eye');
+        }
+    }
+
+
 document.getElementById('form-login').addEventListener('submit', (e) => {
     e.preventDefault();
     signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value)
