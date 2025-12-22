@@ -26,16 +26,14 @@
                     <i class="fas fa-envelope"></i>
                     <input type="email" id="login-email" placeholder="E-mail Admin" required>
                 </div>
-<div class="input-group" style="position: relative;">
-    <i class="fas fa-key"></i>
-    <!-- Adicionado style="padding-right: 40px" para o texto não ficar cima do ícone -->
-    <input type="password" id="login-senha" placeholder="Digite a senha" required style="padding-right: 40px;">
-    
-    <!-- Ícone do Olho (Botão de ver senha) -->
-    <i class="fas fa-eye" id="btn-ver-senha" onclick="toggleSenha()" 
-       style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; z-index: 10;">
-    </i>
-</div>
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input type="password" id="login-senha" placeholder="Senha Mestra" required>
+
+                <i class="fas fa-eye" id="btn-ver-senha" 
+   style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #aaa; z-index: 10;">
+</i>
+                </div>
                 <button type="submit" class="btn-cyber">ACESSAR SISTEMA</button>
                 <p style="margin-top:15px; font-size:12px; color:#666; cursor:pointer;" onclick="window.location.href='index.html'">Voltar para Loja</p>
             </form>
