@@ -21,7 +21,15 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); padding-bottom: 90px; overflow-x: hidden; height: 100vh; position: relative; }
+        
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            padding-bottom: 90px; 
+            overflow-x: hidden; 
+            height: 100vh; 
+            position: relative; 
+        }
 
         /* LOADING SCREEN */
         #loading-screen {
@@ -56,6 +64,7 @@
             border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;
             color: var(--white);
             transition: background 0.3s;
+            width: 100%;
         }
         .profile-container { display: flex; align-items: center; gap: 15px; }
         .profile-logo {
@@ -110,6 +119,7 @@
             background: white; border-radius: 20px; padding: 12px; text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s;
             border: 1px solid transparent; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
         .card-produto:active { transform: scale(0.97); }
         .card-produto img { 
@@ -218,13 +228,57 @@
             border: none; width: 45px; height: 45px; border-radius: 50%; margin-right: 15px; cursor: pointer; font-size: 1.1rem; 
         }
 
-        /* RESPONSIVIDADE PC */
+        /* =================================================================
+           CORREÇÃO VISUAL PARA PC (SIMULADOR DE CELULAR)
+           ================================================================= */
         @media (min-width: 768px) {
-            body { max-width: 800px; margin: 0 auto; border-left: 1px solid #eee; border-right: 1px solid #eee; background-color: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
-            header, .footer-action { max-width: 800px; width: 100%; left: 50%; transform: translateX(-50%); }
-            .card-produto img { height: 160px; }
-            .grid-produtos { grid-template-columns: repeat(3, 1fr); gap: 20px; }
-            #app-container { margin-top: 90px; }
+            body {
+                background-color: #222; /* Fundo escuro fora do app */
+                display: flex;
+                justify-content: center;
+            }
+
+            /* Container que simula o celular */
+            #app-container, header, .footer-action, #loading-screen {
+                max-width: 480px; /* Largura fixa de celular */
+                width: 100%;
+                left: 50%;
+                transform: translateX(-50%); /* Centraliza perfeitamente */
+                position: fixed;
+            }
+
+            #app-container {
+                position: relative; /* Volta ao fluxo normal dentro do body flex */
+                transform: none;
+                left: auto;
+                background: var(--bg);
+                min-height: 100vh;
+                box-shadow: 0 0 50px rgba(0,0,0,0.5); /* Sombra para destacar */
+                margin-top: 0; /* Remove margem extra */
+            }
+
+            header {
+                position: fixed;
+                top: 0;
+            }
+
+            .footer-action {
+                position: fixed;
+                bottom: 0;
+            }
+
+            /* Ajuste do botão flutuante no PC */
+            #floating-cart {
+                left: 50%;
+                margin-left: 100px; /* Joga um pouco pra direita do centro */
+                bottom: 90px;
+            }
+
+            /* Barra de rolagem bonita e fina no PC */
+            .step-screen::-webkit-scrollbar { width: 6px; }
+            .step-screen::-webkit-scrollbar-track { background: #f1f1f1; }
+            .step-screen::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+            .step-screen::-webkit-scrollbar-thumb:hover { background: var(--primary); }
         }
 
         .hidden { display: none !important; }
@@ -356,7 +410,7 @@
 
     <div class="admin-footer">
         <p>&copy; 2025 Sistema White Label</p>
-        <span class="admin-lock" onclick="window.location.href='admin.html'"><i class="fas fa-lock"></i> v3.0</span>
+        <span class="admin-lock" onclick="window.location.href='admin.html'"><i class="fas fa-lock"></i> v3.1</span>
     </div>
 
     <script type="module">
