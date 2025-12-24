@@ -436,7 +436,7 @@
             constructor() {
                 // 1. PEGA O ID DA EMPRESA PELA URL (?id=universo_acai)
                 const params = new URLSearchParams(window.location.search);
-                this.empresaId = params.get('id') || "universo_acai"; 
+                this.empresaId = params.get('id') || "congelatto"; 
                 
                 // Carrinho separado por empresa para não misturar
                 this.carrinho = JSON.parse(localStorage.getItem(`cart_${this.empresaId}`)) || [];
