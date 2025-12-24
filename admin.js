@@ -1,12 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, onValue, update, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // =======================================================
-// COPIE A SUA FIREBASE CONFIG DO SCRIPT.JS E COLE AQUI:
+// CONFIGURAÇÃO DO FIREBASE
 // =======================================================
-
-
 const firebaseConfig = {
   apiKey: "AIzaSyCnTKk4-WSvSpoy0onqWBTDLqDfY9oaEdE",
   authDomain: "drxagencia-6ce0a.firebaseapp.com",
@@ -17,46 +15,82 @@ const firebaseConfig = {
   appId: "1:251757919420:web:26a49c29d0bab8cafca4b9",
   measurementId: "G-V3L12DWZL5"
 };
-// =======================================================
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
-const companyId = "universo_acai";
-const ADMIN_EMAIL = "admin@universoacai.com"; // Deve ser igual ao Authentication
 
-// --- 1. SEGURANÇA E LOGIN ---
-onAuthStateChanged(auth, (user) => {
+// Variável global para guardar o ID da empresa detectada
+let currentCompanyId = null;
+
+// --- 1. SEGURANÇA E LOGIN INTELIGENTE ---
+onAuthStateChanged(auth, async (user) => {
     if (user) {
-        if (user.email !== ADMIN_EMAIL) {
-            alert("Acesso Negado: Este admin não pertence a esta empresa.");
+        // O usuário está logado, mas ainda não sabemos qual é a empresa dele.
+        // Vamos buscar no banco qual empresa tem esse email como 'email_dono'.
+        
+        try {
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, "empresas"));
+            
+            if (snapshot.exists()) {
+                const todasEmpresas = snapshot.val();
+                let empresaEncontrada = null;
+
+                // Loop para encontrar o dono
+                for (const [id, dados] of Object.entries(todasEmpresas)) {
+                    if (dados.config && dados.config.email_dono === user.email) {
+                        empresaEncontrada = id;
+                        break;
+                    }
+                }
+
+                if (empresaEncontrada) {
+                    currentCompanyId = empresaEncontrada;
+                    iniciarDashboard(user.email);
+                } else {
+                    alert("ERRO CRÍTICO: Seu usuário existe, mas nenhuma loja está vinculada a este e-mail no banco de dados.");
+                    signOut(auth);
+                }
+            } else {
+                alert("Erro: Banco de dados vazio ou sem permissão de leitura.");
+                signOut(auth);
+            }
+
+        } catch (error) {
+            console.error("Erro ao buscar empresa:", error);
+            alert("Erro de conexão ou permissão.");
             signOut(auth);
-            return;
         }
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('dashboard-screen').style.display = 'block';
-        initSystem();
     } else {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('dashboard-screen').style.display = 'none';
     }
 });
 
+function iniciarDashboard(email) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard-screen').style.display = 'block';
+    
+    // Formata o ID para ficar bonito no topo (ex: universo_acai -> UNIVERSO ACAI)
+    const nomeFormatado = currentCompanyId.replace(/_/g, ' ').toUpperCase();
+    document.querySelector('.brand').innerHTML = `<i class="fas fa-terminal"></i> ${nomeFormatado} <span style="color: var(--neon-blue);">ADMIN</span>`;
+    
+    document.title = `Admin | ${nomeFormatado}`;
+    
+    initSystem();
+}
 
 // Função para ver/ocultar senha
 const btnVerSenha = document.getElementById('btn-ver-senha');
-
 if (btnVerSenha) {
     btnVerSenha.addEventListener('click', () => {
         const inputSenha = document.getElementById('login-senha');
-        
         if (inputSenha.type === "password") {
-            // Mostrar senha
             inputSenha.type = "text";
             btnVerSenha.classList.remove('fa-eye');
             btnVerSenha.classList.add('fa-eye-slash');
         } else {
-            // Ocultar senha
             inputSenha.type = "password";
             btnVerSenha.classList.remove('fa-eye-slash');
             btnVerSenha.classList.add('fa-eye');
@@ -66,11 +100,23 @@ if (btnVerSenha) {
 
 document.getElementById('form-login').addEventListener('submit', (e) => {
     e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "Verificando...";
+    btn.disabled = true;
+
     signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value)
-        .catch(error => alert("Erro: " + error.message));
+        .catch(error => {
+            alert("Erro de Login: " + error.message);
+            btn.innerText = textoOriginal;
+            btn.disabled = false;
+        });
 });
 
-window.fazerLogout = () => signOut(auth);
+window.fazerLogout = () => {
+    currentCompanyId = null;
+    signOut(auth);
+};
 
 // --- 2. NAVEGAÇÃO ---
 window.trocarAba = (aba) => {
@@ -78,8 +124,10 @@ window.trocarAba = (aba) => {
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`view-${aba}`).style.display = 'block';
     
-    const navMap = { 'pedidos': 0, 'financeiro': 1, 'estoque': 2 };
-    document.querySelectorAll('.nav-btn')[navMap[aba]].classList.add('active');
+    const btns = document.querySelectorAll('.nav-btn');
+    if(aba === 'pedidos') btns[0].classList.add('active');
+    if(aba === 'financeiro') btns[1].classList.add('active');
+    if(aba === 'estoque') btns[2].classList.add('active');
 };
 
 // --- 3. SISTEMA ---
@@ -91,7 +139,7 @@ function initSystem() {
     document.getElementById('filtro-data-financeiro').value = hoje;
 
     carregarPedidos();
-    carregarEstoque(); // Nova função corrigida
+    carregarEstoque();
 
     document.getElementById('filtro-data-pedidos').addEventListener('change', renderizarPedidos);
     document.getElementById('filtro-data-financeiro').addEventListener('change', calcularFinanceiro);
@@ -99,21 +147,21 @@ function initSystem() {
 
 // --- 4. PEDIDOS ---
 function carregarPedidos() {
-    const pedidosRef = ref(db, `empresas/${companyId}/pedidos`);
+    // Usa o ID descoberto automaticamente
+    const pedidosRef = ref(db, `empresas/${currentCompanyId}/pedidos`);
+    
     onValue(pedidosRef, (snapshot) => {
         pedidosCache = [];
         const data = snapshot.val();
         if (data) {
             Object.keys(data).forEach(key => pedidosCache.push({ id: key, ...data[key] }));
         }
-        // Ordena por timestamp se possível, ou usa reverso simples
-        pedidosCache.reverse();
+        pedidosCache.reverse(); 
         renderizarPedidos();
         calcularFinanceiro();
     });
 }
 
-// --- SUBSTITUA A FUNÇÃO renderizarPedidos POR ESTA ---
 function renderizarPedidos() {
     const filtro = document.getElementById('filtro-data-pedidos').value; 
     const [ano, mes, dia] = filtro.split('-');
@@ -122,26 +170,21 @@ function renderizarPedidos() {
     const container = document.getElementById('lista-pedidos');
     container.innerHTML = '';
 
-    // Filtra pela data
     const filtrados = pedidosCache.filter(p => p.data_hora && p.data_hora.includes(buscaData));
 
     if (filtrados.length === 0) {
-        container.innerHTML = '<p style="color:#666; width:100%">Sem pedidos nesta data.</p>';
+        container.innerHTML = '<p style="color:#666; width:100%; text-align:center; padding:20px;">Sem pedidos nesta data.</p>';
         return;
     }
 
     filtrados.forEach(p => {
-        // Define cor do status
         let classeStatus = 'st-pendente';
-        if (p.status === 'entregue' || p.status === 'em_transporte') classeStatus = 'st-entregue'; // Reuso a cor verde/azul
+        if (p.status === 'entregue' || p.status === 'em_transporte' || p.status === 'finalizado') classeStatus = 'st-entregue';
         if (p.status === 'cancelado') classeStatus = 'st-cancelado';
-        if (p.status === 'finalizado') classeStatus = 'st-entregue'; // Finalizado fica verde também
 
-        // Renderiza itens
         let htmlItens = '';
         if (p.itens) {
             p.itens.forEach(item => {
-                // Formata os detalhes (sabores, recheios, adicionais)
                 const sabores = item.sabores && item.sabores.length > 0 ? `<b>Sabores:</b> ${item.sabores.join(', ')}` : '';
                 const recheios = item.recheios && item.recheios.length > 0 ? `<b>Recheios:</b> ${item.recheios.join(', ')}` : '';
                 const adds = item.adicionais && item.adicionais.length > 0 ? `<b>Extras:</b> ${item.adicionais.map(a => a.nome).join(', ')}` : '';
@@ -158,38 +201,22 @@ function renderizarPedidos() {
             });
         }
 
-        // LÓGICA DOS BOTÕES (WORKFLOW)
         let botoesHtml = '';
-
         if (!p.status || p.status === 'pendente') {
-            // Passo 1: Aceitar (vai para preparo) ou Cancelar
             botoesHtml = `
                 <button onclick="mudarStatus('${p.id}', 'cancelado')" class="btn-status btn-cancelar">RECUSAR</button>
-                <button onclick="mudarStatus('${p.id}', 'preparo')" class="btn-status btn-preparo">
-                    <i class="fas fa-fire"></i> PREPARAR
-                </button>
+                <button onclick="mudarStatus('${p.id}', 'preparo')" class="btn-status btn-preparo"><i class="fas fa-fire"></i> PREPARAR</button>
             `;
         } else if (p.status === 'preparo') {
-            // Passo 2: Mandar para entrega
-            botoesHtml = `
-                <button onclick="mudarStatus('${p.id}', 'entrega')" class="btn-status btn-entrega">
-                    <i class="fas fa-motorcycle"></i> SAIU P/ ENTREGA
-                </button>
-            `;
+            botoesHtml = `<button onclick="mudarStatus('${p.id}', 'entrega')" class="btn-status btn-entrega"><i class="fas fa-motorcycle"></i> ENTREGA</button>`;
         } else if (p.status === 'entrega') {
-            // Passo 3: Finalizar (Recebeu $)
-            botoesHtml = `
-                <button onclick="mudarStatus('${p.id}', 'finalizado')" class="btn-status btn-finalizar">
-                    <i class="fas fa-check-double"></i> FINALIZAR PEDIDO
-                </button>
-            `;
+            botoesHtml = `<button onclick="mudarStatus('${p.id}', 'finalizado')" class="btn-status btn-finalizar"><i class="fas fa-check-double"></i> FINALIZAR</button>`;
         } else if (p.status === 'finalizado') {
-            botoesHtml = `<span style="color:var(--neon-green); font-size:0.8rem;">PEDIDO CONCLUÍDO & CONTABILIZADO</span>`;
+            botoesHtml = `<span style="color:var(--neon-green); font-size:0.8rem;">PEDIDO CONCLUÍDO</span>`;
         } else if (p.status === 'cancelado') {
-            botoesHtml = `<span style="color:var(--neon-red); font-size:0.8rem;">PEDIDO CANCELADO</span>`;
+            botoesHtml = `<span style="color:var(--neon-red); font-size:0.8rem;">CANCELADO</span>`;
         }
 
-        // CORREÇÃO DE UI: Formatar endereço corretamente
         let enderecoFormatado = 'Retirada/Sem endereço';
         if (p.endereco && typeof p.endereco === 'object') {
             enderecoFormatado = `${p.endereco.rua || ''}, ${p.endereco.bairro || ''} (${p.endereco.ref || ''})`;
@@ -197,7 +224,6 @@ function renderizarPedidos() {
             enderecoFormatado = p.endereco;
         }
 
-        // CORREÇÃO DE UI: Usar o ID sequencial se existir, senão o hash
         const idVisual = p.display_id ? p.display_id : `#${p.id.slice(-4)}`;
 
         const card = document.createElement('div');
@@ -211,6 +237,7 @@ function renderizarPedidos() {
                 <i class="fas fa-user"></i> ${p.cliente?.nome || 'Cliente'} <br>
                 <i class="fab fa-whatsapp"></i> ${p.cliente?.whatsapp || ''} <br>
                 <small style="color:#888;">${enderecoFormatado}</small>
+                <div style="margin-top:5px; color:#aaa; font-size:0.85rem;"><i class="far fa-credit-card"></i> ${p.pagamento?.metodo || '?'} ${p.pagamento?.troco ? '(Troco: '+p.pagamento.troco+')' : ''}</div>
             </div>
             <div style="background:#111; padding:10px; border-radius:5px; margin-bottom:10px;">${htmlItens}</div>
             
@@ -219,16 +246,14 @@ function renderizarPedidos() {
                 <strong style="font-size:1.4rem;">R$ ${p.total_pedido || 0}</strong>
             </div>
 
-            <div class="actions-container">
-                ${botoesHtml}
-            </div>
+            <div class="actions-container">${botoesHtml}</div>
         `;
         container.appendChild(card);
     });
 }
 
 window.mudarStatus = (id, st) => {
-    update(ref(db, `empresas/${companyId}/pedidos/${id}`), { status: st });
+    update(ref(db, `empresas/${currentCompanyId}/pedidos/${id}`), { status: st });
 };
 
 // --- 5. FINANCEIRO ---
@@ -241,25 +266,22 @@ function calcularFinanceiro() {
     let fatDia = 0, fatMes = 0;
 
     pedidosCache.forEach(p => {
-        // MUDANÇA: Só conta dinheiro se status for 'finalizado'
         if(p.status !== 'finalizado') return;
-
         let val = parseFloat(p.total_pedido) || 0;
-        
         if (p.data_hora && p.data_hora.includes(strDia)) fatDia += val;
         if (p.data_hora && p.data_hora.includes(`/${strMes}`)) fatMes += val;
     });
 
-    const margem = 0.40; // Exemplo de 40% de margem
+    const margem = 0.40; 
     document.getElementById('fat-dia').innerText = `R$ ${fatDia.toFixed(2)}`;
     document.getElementById('lucro-dia').innerText = `R$ ${(fatDia * margem).toFixed(2)}`;
     document.getElementById('fat-mes').innerText = `R$ ${fatMes.toFixed(2)}`;
     document.getElementById('lucro-mes').innerText = `R$ ${(fatMes * margem).toFixed(2)}`;
 }
+
 // --- 6. ESTOQUE ---
 function carregarEstoque() {
-    // Aponta para a NOVA estrutura dentro da empresa
-    const base = `empresas/${companyId}/cardapio`;
+    const base = `empresas/${currentCompanyId}/cardapio`;
     renderToggleGroup(`${base}/sabores`, 'estoque-sabores');
     renderToggleGroup(`${base}/recheios`, 'estoque-recheios');
     renderToggleGroup(`${base}/adicionais`, 'estoque-adicionais');
@@ -272,8 +294,10 @@ function renderToggleGroup(path, divId) {
         const dados = snapshot.val();
         
         if(dados) {
-            Object.keys(dados).forEach(key => {
-                const item = dados[key];
+            const lista = Array.isArray(dados) ? dados : Object.keys(dados).map(k => ({ key: k, ...dados[k] }));
+            
+            lista.forEach((item, index) => {
+                const key = item.key || index; 
                 const isAtivo = item.disponivel !== false;
 
                 const row = document.createElement('div');
@@ -293,6 +317,5 @@ function renderToggleGroup(path, divId) {
 }
 
 window.toggleItem = (fullPath, estado) => {
-    // Atualiza o caminho exato passado
     update(ref(db, fullPath), { disponivel: estado });
 };
