@@ -1,7 +1,7 @@
 
 export type View = 'dashboard' | 'aulas' | 'militares' | 'redacao' | 'tutor' | 'simulados' | 'questoes' | 'comunidade' | 'competitivo' | 'admin' | 'ajustes';
 
-export type UserPlan = 'basic' | 'intermediate' | 'advanced' | 'admin';
+export type UserPlan = 'basic' | 'advanced' | 'admin';
 export type BillingCycle = 'monthly' | 'yearly';
 
 export interface User {
@@ -17,6 +17,8 @@ export interface UserProfile extends User {
   billingCycle?: BillingCycle;
   subscriptionExpiry?: string;
   xp?: number;
+  weeklyXp?: number; // New: Weekly XP
+  lastXpWeek?: number; // New: Week ID for reset logic
   balance: number;
   essayCredits?: number;
   hoursStudied?: number;
@@ -200,7 +202,28 @@ export interface Transaction {
   currencyType?: 'BRL' | 'CREDIT';
 }
 
+export interface PlanFeatures {
+    canUseChat: boolean;
+    canUseExplanation: boolean; // For question bank AI
+    canUseEssay: boolean;
+    canUseSimulations: boolean;
+    canUseCommunity: boolean;
+    canUseMilitary: boolean;
+}
+
+export interface PlanConfig {
+    permissions: {
+        basic: PlanFeatures;
+        advanced: PlanFeatures;
+    };
+    prices: {
+        basic: number;
+        advanced: number;
+    };
+}
+
 export interface AiConfig {
+  // Legacy, kept for compatibility, now mostly superseded by PlanConfig
   intermediateLimits: {
     canUseChat: boolean;
     canUseExplanation: boolean;

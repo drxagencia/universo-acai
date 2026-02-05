@@ -19,6 +19,31 @@ import {
 
 export const APP_NAME = "NeuroStudy AI";
 
+// Links de Pagamento
+export const KIRVANO_LINKS = {
+    // Planos Principais
+    plan_basic: "https://pay.kirvano.com/2e8b154f-522d-4168-a056-0b991f51ebf0",
+    plan_advanced: "https://pay.kirvano.com/9364ce1c-9acd-48d1-ba53-1c8f764dcca6",
+
+    // Pacotes de Redação
+    essay_pack_basic: "https://pay.kirvano.com/83638982-90c9-48d3-bf1d-8501dd285914",        // Básico
+    essay_pack_intermediate: "https://pay.kirvano.com/68671170-9b25-4bcc-93e0-5e04ffbd4151", // Intermediário
+    essay_pack_advanced: "https://pay.kirvano.com/c476c796-86e4-4de2-9871-eef7fbc966a7",     // Avançado
+
+    // IA Ilimitada (Link único fornecido)
+    ai_unlimited_monthly: "https://pay.kirvano.com/2b01fe5f-9b22-4325-8d6c-835ed83119d8",
+    ai_unlimited_semester: "https://pay.kirvano.com/2b01fe5f-9b22-4325-8d6c-835ed83119d8",
+    ai_unlimited_yearly: "https://pay.kirvano.com/2b01fe5f-9b22-4325-8d6c-835ed83119d8",
+
+    // Upgrades (Direcionam para o Advanced)
+    upgrade_monthly: "https://pay.kirvano.com/9364ce1c-9acd-48d1-ba53-1c8f764dcca6",
+    upgrade_yearly: "https://pay.kirvano.com/9364ce1c-9acd-48d1-ba53-1c8f764dcca6",
+
+    // Fallbacks
+    balance_recharge: "https://pay.kirvano.com/2e8b154f-522d-4168-a056-0b991f51ebf0",
+    essay_credits: "https://pay.kirvano.com/83638982-90c9-48d3-bf1d-8501dd285914",
+};
+
 export const ANNOUNCEMENTS: Announcement[] = [
   {
     id: '1',

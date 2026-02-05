@@ -1,7 +1,7 @@
 
-import * as firebaseApp from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getDatabase, ref, get, update, push, set } from "firebase/database";
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY || "AIzaSyDbNCUqJIR0OfuqoI6uh_gg6Htp2yh3fBo",
@@ -12,22 +12,21 @@ const firebaseConfig = {
 
 // Initialize Firebase App for serverless context
 let app;
-if (firebaseApp.getApps().length > 0) {
-    app = firebaseApp.getApp();
+const apps = getApps();
+if (apps.length > 0) {
+    app = getApp();
 } else {
     try {
-        app = firebaseApp.initializeApp(firebaseConfig, "serverless_worker");
+        app = initializeApp(firebaseConfig, "serverless_worker");
     } catch (e: any) {
-        // Fallback or if already exists
-        app = firebaseApp.getApps().length > 0 ? firebaseApp.getApp() : firebaseApp.initializeApp(firebaseConfig);
+        app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     }
 }
 
 const db = getDatabase(app);
 
-// Configuration for Gemini
-const GEMINI_MODEL = "gemini-3-flash-preview"; // Updated to recommended model
-const GEMINI_VISION_MODEL = "gemini-2.5-flash-image"; // Valid for image tasks
+// OpenAI Configuration
+const OPENAI_MODEL = "gpt-4o-mini"; // Cost-effective, supports vision
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -43,34 +42,39 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'Server Config Error: Missing Gemini API Key' });
+  // Use environment variable for OpenAI Key
+  const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) return res.status(500).json({ error: 'Server Config Error: Missing OpenAI API Key' });
 
   try {
     const { message, history, mode, uid, image, systemOverride } = req.body;
 
     if (!uid) return res.status(401).json({ error: 'User ID required' });
 
+    // DATABASE CHECK: Ensure we get the source of truth for the plan
     const userRef = ref(db, `users/${uid}`);
-    const configRef = ref(db, `config/ai`);
-    
-    const [userSnap, configSnap] = await Promise.all([get(userRef), get(configRef)]);
+    const userSnap = await get(userRef);
     
     if (!userSnap.exists()) return res.status(404).json({ error: 'User not found' });
     
     const user = userSnap.val();
-    const config = configSnap.val() || { intermediateLimits: { canUseChat: false, canUseExplanation: true } };
+    
+    // STRICT PLAN CHECK
+    const isBasic = user.plan === 'basic';
+    const isAdvanced = user.plan === 'advanced' || user.plan === 'admin' || user.isAdmin;
 
     // --- ESSAY CORRECTION LOGIC (VISION) ---
     if (mode === 'essay-correction') {
+        // Basic users CAN perform essay correction IF they have credits (purchased separately)
+        // Advanced users have credits included in subscription
         const credits = user.essayCredits || 0;
         if (credits <= 0) {
             return res.status(402).json({ error: 'Sem créditos de redação.' });
         }
 
-        // Count existing essays to determine if this is 3rd or more
-        const essaysRef = ref(db, `user_essays/${uid}`);
-        
+        // Initialize OpenAI
+        const openai = new OpenAI({ apiKey });
+
         // PROMPT CALIBRADO - PADRÃO INEP/ENEM OFICIAL
         const prompt = `
             ATUE COMO: Um Corretor Oficial do ENEM (Banca FGV/Vunesp/Cebraspe).
@@ -98,70 +102,64 @@ export default async function handler(req: any, res: any) {
             4. Exija proposta de intervenção completa (C5).
         `;
 
-        const ai = new GoogleGenAI({ apiKey });
-        
-        // Prepare Image Part
-        // Assuming 'image' comes as "data:image/jpeg;base64,....."
-        const base64Data = image.split(',')[1];
-        
-        const response = await ai.models.generateContent({
-            model: GEMINI_VISION_MODEL,
-            contents: {
-                parts: [
-                    { text: prompt },
-                    { inlineData: { mimeType: 'image/jpeg', data: base64Data } }
-                ]
-            }
+        const response = await openai.chat.completions.create({
+            model: OPENAI_MODEL,
+            messages: [
+                {
+                    role: "user",
+                    content: [
+                        { type: "text", text: prompt },
+                        { type: "image_url", image_url: { url: image } } // image MUST be a data URL (data:image/jpeg;base64,...)
+                    ],
+                },
+            ],
+            response_format: { type: "json_object" } // Force JSON
         });
 
         // Debit credit from DB
         await update(userRef, { essayCredits: credits - 1 });
 
-        return res.status(200).json({ text: response.text });
+        return res.status(200).json({ text: response.choices[0].message.content });
     }
 
     // --- CHAT / TUTOR LOGIC ---
     
-    // Check Permissions
-    const isBasic = user.plan === 'basic';
-    const isIntermediate = user.plan === 'intermediate';
-    
+    // Strict block for Basic Plan on Chat
     if (isBasic && mode === 'chat') {
-        return res.status(403).json({ error: 'Upgrade seu plano para usar o chat livre.' });
-    }
-    if (isIntermediate && mode === 'chat' && !config.intermediateLimits.canUseChat) {
-        return res.status(403).json({ error: 'Seu plano permite apenas explicações de questões.' });
+        return res.status(403).json({ error: 'Upgrade para o plano Advanced necessário para usar o NeuroTutor.' });
     }
 
     // Check Balance (Cost Per Message approx)
-    const COST_PER_REQ = isBasic ? 0.02 : 0.01; // Basic pays double
+    // Advanced users pay standard rate or have optimized consumption
+    const COST_PER_REQ = 0.01; 
+    
     if (user.balance < COST_PER_REQ) {
         return res.status(402).json({ error: 'Saldo insuficiente.' });
     }
 
-    const ai = new GoogleGenAI({ apiKey });
-    const model = GEMINI_MODEL;
+    // Initialize OpenAI
+    const openai = new OpenAI({ apiKey });
 
     let systemInstruction = systemOverride || "Você é a NeuroAI, uma tutora educacional de elite. Seja didática, direta e use formatação Markdown rica (negrito, listas).";
 
-    // Transform history to Gemini format
-    // Gemini expects 'user' and 'model' roles.
-    const geminiHistory = history.map((h: any) => ({
-        role: h.role === 'ai' ? 'model' : 'user',
-        parts: [{ text: h.content }]
+    // Transform history to OpenAI format
+    const openAiHistory = history.map((h: any) => ({
+        role: h.role === 'ai' ? 'assistant' : 'user',
+        content: h.content
     }));
 
-    // Add current message
-    const chat = ai.chats.create({
-        model: model,
-        history: geminiHistory,
-        config: {
-            systemInstruction: systemInstruction,
-        }
+    const messages = [
+        { role: 'system', content: systemInstruction },
+        ...openAiHistory,
+        { role: 'user', content: message }
+    ];
+
+    const result = await openai.chat.completions.create({
+        model: OPENAI_MODEL,
+        messages: messages as any,
     });
 
-    const result = await chat.sendMessage({ message: message });
-    const responseText = result.text;
+    const responseText = result.choices[0].message.content;
 
     // Deduct Balance
     const newBalance = Math.max(0, user.balance - COST_PER_REQ);

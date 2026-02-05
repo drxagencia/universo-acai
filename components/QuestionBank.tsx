@@ -3,59 +3,73 @@ import React, { useState, useEffect } from 'react';
 import { DatabaseService } from '../services/databaseService';
 import { AiService } from '../services/aiService';
 import { Subject, Question, UserProfile } from '../types';
-import { ChevronRight, Filter, PlayCircle, Loader2, CheckCircle, XCircle, ArrowRight, ArrowLeft, Eye, EyeOff, X, Ban, Sparkles, Bot } from 'lucide-react';
+import { ChevronRight, Filter, PlayCircle, Loader2, CheckCircle, XCircle, ArrowRight, ArrowLeft, Eye, EyeOff, X, Ban, Sparkles, Bot, Zap } from 'lucide-react';
 import { auth } from '../services/firebaseConfig';
 
-// --- HELPER COMPONENT: Simple Markdown Parser ---
-const SimpleMarkdown: React.FC<{ text: string }> = ({ text }) => {
+// --- PROFESSIONAL MARKDOWN RENDERER ---
+const ProfessionalMarkdown: React.FC<{ text: string }> = ({ text }) => {
     if (!text) return null;
-    
-    // Clean up LaTeX style block delimiters if they slip through
-    const cleanText = text
-        .replace(/\\\[/g, '')
-        .replace(/\\\]/g, '')
-        .replace(/\\\(/g, '')
-        .replace(/\\\)/g, '');
+    const lines = text.split('\n');
 
     return (
-        <div className="leading-relaxed text-lg text-slate-300">
-            {cleanText.split('\n').map((line, i) => {
-                // Handle Lists
-                if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+        <div className="space-y-4 font-sans text-sm md:text-base leading-relaxed">
+            {lines.map((line, idx) => {
+                const trimmed = line.trim();
+                
+                if (trimmed.startsWith('###')) {
+                    const content = trimmed.replace(/^###\s*/, '');
                     return (
-                        <div key={i} className="flex gap-2 mb-2 ml-4">
-                            <span className="text-indigo-400 mt-1.5">•</span>
-                            <p className="flex-1">
-                                {line.replace(/^[-*]\s+/, '').split(/(\*\*.*?\*\*)/g).map((part, j) => {
-                                    if (part.startsWith('**') && part.endsWith('**')) {
-                                        return <strong key={j} className="text-indigo-200 font-bold">{part.slice(2, -2)}</strong>;
-                                    }
-                                    return part;
-                                })}
-                            </p>
+                        <div key={idx} className="flex items-center gap-3 mt-6 mb-3">
+                            <div className="w-2 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                            <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">{content}</h3>
                         </div>
                     );
                 }
 
-                // Handle Headers (Simple)
-                if (line.trim().startsWith('###')) {
-                    return <h4 key={i} className="text-xl font-bold text-white mt-6 mb-3">{line.replace('###', '').trim()}</h4>
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    const content = trimmed.replace(/^[-*]\s*/, '');
+                    return (
+                        <div key={idx} className="flex gap-3 pl-2 group">
+                            <div className="mt-1.5 min-w-[16px]">
+                                <ArrowRight size={16} className="text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                            <p className="text-slate-200">{parseInlineStyles(content)}</p>
+                        </div>
+                    );
                 }
 
-                // Standard Paragraphs
-                return (
-                    <p key={i} className="mb-4 last:mb-0">
-                        {line.split(/(\*\*.*?\*\*)/g).map((part, j) => {
-                            if (part.startsWith('**') && part.endsWith('**')) {
-                                return <strong key={j} className="text-indigo-200 font-bold">{part.slice(2, -2)}</strong>;
-                            }
-                            return part;
-                        })}
-                    </p>
-                );
+                if (trimmed.startsWith('>')) {
+                    const content = trimmed.replace(/^>\s*/, '');
+                    return (
+                        <div key={idx} className="my-4 p-4 rounded-xl bg-indigo-900/20 border-l-4 border-indigo-500 shadow-lg relative overflow-hidden">
+                            <div className="flex gap-3 relative z-10">
+                                <Zap size={20} className="text-yellow-400 shrink-0 mt-0.5 fill-yellow-400" />
+                                <p className="text-indigo-100 font-medium italic">{parseInlineStyles(content)}</p>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (!trimmed) return <div key={idx} className="h-2"></div>;
+
+                return <p key={idx} className="text-slate-300">{parseInlineStyles(line)}</p>;
             })}
         </div>
     );
+};
+
+const parseInlineStyles = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+                <span key={i} className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-300">
+                    {part.slice(2, -2)}
+                </span>
+            );
+        }
+        return part;
+    });
 };
 
 // --- MAIN COMPONENT ---
@@ -66,7 +80,8 @@ interface QuestionBankProps {
 const QuestionBank: React.FC<QuestionBankProps> = ({ onUpdateUser }) => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [topics, setTopics] = useState<Record<string, string[]>>({});
-  const [subtopics, setSubtopics] = useState<Record<string, string[]>>({});
+  // Updated: Subtopics are now nested by subjectId and topicId
+  const [subtopics, setSubtopics] = useState<Record<string, Record<string, string[]>>>({});
   const [loading, setLoading] = useState(true);
   const [answeredMap, setAnsweredMap] = useState<Record<string, {correct: boolean}>>({});
 
@@ -243,7 +258,8 @@ const QuestionBank: React.FC<QuestionBankProps> = ({ onUpdateUser }) => {
 
       setIsExplaining(true);
       try {
-          const text = await AiService.explainError(currentQ.text, wrongTxt, correctTxt);
+          const contextLabel = `Ajuda: Questão ${currentQ.topic}`;
+          const text = await AiService.explainError(currentQ.text, wrongTxt, correctTxt, contextLabel);
           setAiExplanation(text);
           handleUpdateBalance(); 
       } catch (e: any) {
@@ -279,8 +295,14 @@ const QuestionBank: React.FC<QuestionBankProps> = ({ onUpdateUser }) => {
   const isAnswered = currentQ?.id ? !!answeredMap[currentQ.id] : false;
   const wasCorrect = currentQ?.id ? answeredMap[currentQ.id]?.correct : false;
   const filteredSubjects = subjects.filter(s => s.category === selectedCategory);
+  
+  // Helper to safely get subtopics for current selection
   const topicOptions = selectedSubject ? topics[selectedSubject] || [] : [];
-  const subTopicOptions = selectedTopic ? subtopics[selectedTopic] || [] : [];
+  
+  // Safe Access to nested subtopics
+  const subTopicOptions = (selectedSubject && selectedTopic && subtopics[selectedSubject] && subtopics[selectedSubject][selectedTopic]) 
+      ? subtopics[selectedSubject][selectedTopic] 
+      : [];
 
   return (
     <div className="h-full flex flex-col relative animate-fade-in">
@@ -441,7 +463,7 @@ const QuestionBank: React.FC<QuestionBankProps> = ({ onUpdateUser }) => {
                                 </span>
                             )}
                         </div>
-                        <SimpleMarkdown text={currentQ.text} />
+                        <ProfessionalMarkdown text={currentQ.text} />
                         {currentQ.imageUrl && (
                             <div className="mt-6 rounded-2xl overflow-hidden border border-white/10 bg-black/20 max-w-2xl mx-auto">
                                 <img src={currentQ.imageUrl} className="w-full h-auto object-contain max-h-[400px]" />
@@ -543,7 +565,7 @@ const QuestionBank: React.FC<QuestionBankProps> = ({ onUpdateUser }) => {
                                                  <Bot size={18} /> Explicação do Professor
                                              </div>
                                              <div className="text-slate-200 leading-relaxed text-lg bg-slate-900/50 p-6 rounded-xl border border-white/5 shadow-inner">
-                                                 <SimpleMarkdown text={aiExplanation} />
+                                                 <ProfessionalMarkdown text={aiExplanation} />
                                              </div>
                                          </div>
                                      )}
@@ -595,7 +617,7 @@ const QuestionBank: React.FC<QuestionBankProps> = ({ onUpdateUser }) => {
                         <PlayCircle size={64} className="mb-6 opacity-30 text-indigo-500" />
                         <h3 className="text-2xl font-bold text-white mb-2 text-center">Comece a Praticar</h3>
                         <p className="max-w-sm text-center mb-8">Selecione uma matéria e um assunto no filtro acima para carregar as questões.</p>
-                        <button onClick={() => setIsFilterOpen(true)} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-colors">
+                        <button onClick={() => setIsFilterOpen(true)} className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-50 transition-colors">
                             Abrir Filtros
                         </button>
                      </>

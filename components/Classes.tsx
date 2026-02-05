@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { DatabaseService } from '../services/databaseService';
 import { Subject, Lesson, View, UserProfile } from '../types';
 import * as Icons from 'lucide-react';
-import { Loader2, BookX, ArrowLeft, PlayCircle, Video, Layers, ChevronRight, Play, FileText, ExternalLink, Clock, MonitorPlay, GraduationCap, CheckCircle, BrainCircuit, X, MessageCircle, Target, ArrowRight, Zap, Network, BarChart, FileType } from 'lucide-react';
+import { Loader2, BookX, ArrowLeft, PlayCircle, Video, Layers, ChevronRight, Play, FileText, ExternalLink, Clock, MonitorPlay, GraduationCap, CheckCircle, BrainCircuit, X, MessageCircle, Target, ArrowRight, Zap, Network, BarChart, FileType, Sparkles } from 'lucide-react';
 import { AiService } from '../services/aiService';
 import { auth } from '../services/firebaseConfig';
 
@@ -35,42 +35,70 @@ const VideoPlayer = React.memo(({ videoId, title }: { videoId: string, title: st
     );
 });
 
-// --- HELPER: Rich Markdown Renderer for Tutor ---
-const TutorMarkdown: React.FC<{ text: string }> = ({ text }) => {
+// --- PROFESSIONAL MARKDOWN RENDERER ---
+const ProfessionalMarkdown: React.FC<{ text: string }> = ({ text }) => {
     if (!text) return null;
+    const lines = text.split('\n');
+
     return (
-        <div className="space-y-4 text-slate-300 leading-relaxed font-light text-sm md:text-base">
-            {text.split('\n').map((line, i) => {
-                // Header detection
-                if (line.trim().startsWith('###')) return <h4 key={i} className="text-lg font-bold text-indigo-300 mt-6 mb-2 border-b border-indigo-500/30 pb-1">{line.replace(/###/g, '').trim()}</h4>;
-                if (line.trim().startsWith('##')) return <h3 key={i} className="text-xl font-bold text-white mt-8 mb-3 flex items-center gap-2"><Zap size={18} className="text-yellow-400"/> {line.replace(/##/g, '').trim()}</h3>;
+        <div className="space-y-4 font-sans text-sm md:text-base leading-relaxed">
+            {lines.map((line, idx) => {
+                const trimmed = line.trim();
                 
-                // List items (Mind map style)
-                if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
-                    const depth = line.search(/\S/) / 2;
+                if (trimmed.startsWith('###')) {
+                    const content = trimmed.replace(/^###\s*/, '');
                     return (
-                        <div key={i} className="flex gap-2 ml-2" style={{ paddingLeft: `${depth * 10}px` }}>
-                            <span className="text-emerald-400 mt-1.5">•</span>
-                            <p className="flex-1">
-                                {line.replace(/^[-*]\s+/, '').split(/(\*\*.*?\*\*)/g).map((part, j) => 
-                                    part.startsWith('**') ? <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong> : part
-                                )}
-                            </p>
+                        <div key={idx} className="flex items-center gap-3 mt-6 mb-3">
+                            <div className="w-2 h-8 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                            <h3 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">{content}</h3>
                         </div>
                     );
                 }
-                
-                // Standard text
-                return (
-                    <p key={i} className="min-h-[10px]">
-                        {line.split(/(\*\*.*?\*\*)/g).map((part, j) => 
-                            part.startsWith('**') ? <strong key={j} className="text-indigo-200 font-semibold bg-indigo-900/20 px-1 rounded">{part.slice(2, -2)}</strong> : part
-                        )}
-                    </p>
-                );
+
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    const content = trimmed.replace(/^[-*]\s*/, '');
+                    return (
+                        <div key={idx} className="flex gap-3 pl-2 group">
+                            <div className="mt-1.5 min-w-[16px]">
+                                <ArrowRight size={16} className="text-indigo-400 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                            <p className="text-slate-200">{parseInlineStyles(content)}</p>
+                        </div>
+                    );
+                }
+
+                if (trimmed.startsWith('>')) {
+                    const content = trimmed.replace(/^>\s*/, '');
+                    return (
+                        <div key={idx} className="my-4 p-4 rounded-xl bg-indigo-900/20 border-l-4 border-indigo-500 shadow-lg relative overflow-hidden">
+                            <div className="flex gap-3 relative z-10">
+                                <Zap size={20} className="text-yellow-400 shrink-0 mt-0.5 fill-yellow-400" />
+                                <p className="text-indigo-100 font-medium italic">{parseInlineStyles(content)}</p>
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (!trimmed) return <div key={idx} className="h-2"></div>;
+
+                return <p key={idx} className="text-slate-300">{parseInlineStyles(line)}</p>;
             })}
         </div>
     );
+};
+
+const parseInlineStyles = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return (
+                <span key={i} className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-300">
+                    {part.slice(2, -2)}
+                </span>
+            );
+        }
+        return part;
+    });
 };
 
 interface ClassesProps {
@@ -93,15 +121,11 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
   const [loadingContent, setLoadingContent] = useState(false);
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
 
-  // AI Summary Modal State (Legacy - kept for "Concluir Aula" flow)
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-
   // --- ULTRA NEURO TUTOR STATE ---
   const [showSmartPanel, setShowSmartPanel] = useState(false);
   const [tutorInput, setTutorInput] = useState('');
-  const [tutorHistory, setTutorHistory] = useState<{role: 'user' | 'ai', content: string}[]>([]);
+  // Fix: Include 'id' in the history state type to match ChatMessage[]
+  const [tutorHistory, setTutorHistory] = useState<{id: string, role: 'user' | 'ai', content: string}[]>([]);
   const [tutorLoading, setTutorLoading] = useState(false);
 
   useEffect(() => {
@@ -134,22 +158,25 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
       setLoadingContent(false);
   };
 
-  const handleTopicClick = (topicName: string) => {
-      setSelectedTopic(topicName);
-  };
-
   const handleLessonClick = (lesson: Lesson) => {
       if (lesson.type === 'exercise_block' && lesson.exerciseFilters) {
           sessionStorage.setItem('qb_filters', JSON.stringify(lesson.exerciseFilters));
           onNavigate('questoes');
       } else {
           setSelectedLesson(lesson);
-          setShowAiModal(false);
-          setAiSummary(null);
           // Reset Tutor on new lesson
           setShowSmartPanel(false);
           setTutorHistory([]);
           window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+  };
+
+  const handleTopicClick = (topicName: string) => {
+      setSelectedTopic(topicName);
+      // AUTO-SELECT FIRST LESSON TO ENTER PLAYER VIEW
+      const lessons = topicsWithLessons[topicName];
+      if (lessons && lessons.length > 0) {
+          handleLessonClick(lessons[0]);
       }
   };
 
@@ -180,29 +207,6 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
 
       // 3. Update local state
       setCompletedLessons(prev => new Set(prev).add(selectedLesson.id!));
-
-      // 4. Show Modal
-      setShowAiModal(true);
-  };
-
-  const generateSummary = async () => {
-      if (!selectedLesson) return;
-      if (user.balance < 0.05) {
-          alert("Saldo insuficiente. Recarregue no menu.");
-          return;
-      }
-
-      setAiLoading(true);
-      try {
-          const prompt = `Resumo da aula "${selectedLesson.title}".`;
-          const text = await AiService.sendMessage(prompt, []); // Legacy simple call
-          setAiSummary(text);
-          await updateBalanceLocally();
-      } catch (e) {
-          setAiSummary("Erro ao gerar resumo.");
-      } finally {
-          setAiLoading(false);
-      }
   };
 
   // --- ULTRA TUTOR LOGIC ---
@@ -218,50 +222,42 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
       // Context Engineering
       let systemPrompt = "";
       let userQuery = "";
+      let actionLabel = "NeuroTutor: Dúvida Aula";
 
       const contextHeader = `[CONTEXTO DA AULA]\nTítulo: ${selectedLesson.title}\nTópico: ${selectedTopic}\nMatéria: ${selectedSubject?.name}`;
 
       if (actionType === 'mindmap') {
           userQuery = "Crie um MAPA MENTAL esquematizado desta aula.";
           systemPrompt = `${contextHeader}\n\nVocê é um especialista em Aprendizagem Acelerada. Crie um mapa mental usando Markdown (listas com indentação - ou *). Use EMOJIS para categorizar. Seja hierárquico e visual.`;
+          actionLabel = "NeuroTutor: Mapa Mental";
       } else if (actionType === 'summary') {
           userQuery = "Gere um RESUMO DE ALTA PERFORMANCE focado no ENEM.";
           systemPrompt = `${contextHeader}\n\nVocê é um Professor Sênior de Cursinho. Crie um resumo 'direto ao ponto'. Use negrito para conceitos chave. Liste 'O que cai no ENEM' no final.`;
+          actionLabel = "NeuroTutor: Resumo Aula";
       } else {
           userQuery = tutorInput;
           systemPrompt = `${contextHeader}\n\nResponda como um Tutor de Elite. Seja detalhista, use exemplos, analogias e formatação rica.`;
       }
 
       // Add user message to history optimistically
-      const newUserMsg = { role: 'user' as const, content: userQuery };
+      const newUserMsg = { id: Date.now().toString(), role: 'user' as const, content: userQuery };
       const newHistory = [...tutorHistory, newUserMsg];
       setTutorHistory(newHistory);
       setTutorInput('');
 
       try {
-          // Call Backend with special override
-          const response = await fetch('/api/chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ 
-                  message: userQuery,
-                  history: tutorHistory, // Pass previous context
-                  uid: auth.currentUser?.uid,
-                  systemOverride: systemPrompt, // Force specific persona
-                  mode: 'lesson_tutor' // Trigger specific pricing/logging if needed
-              }),
-          });
+          // Use AiService which now calls Client-side GenAI directly
+          // Pass actionLabel for history
+          // FIXED: Pass systemPrompt as the 4th argument so AiService uses the lesson context
+          const responseText = await AiService.sendMessage(userQuery, newHistory, actionLabel, systemPrompt);
 
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error);
-
-          setTutorHistory(prev => [...prev, { role: 'ai', content: data.text }]);
+          setTutorHistory(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'ai', content: responseText }]);
           await updateBalanceLocally();
           
           if(auth.currentUser) DatabaseService.processXpAction(auth.currentUser.uid, 'AI_CHAT_MESSAGE');
 
       } catch (e: any) {
-          setTutorHistory(prev => [...prev, { role: 'ai', content: "Erro de conexão com o NeuroTutor." }]);
+          setTutorHistory(prev => [...prev, { id: (Date.now() + 1).toString(), role: 'ai', content: "Erro de conexão com o NeuroTutor. Verifique se sua API Key está configurada." }]);
       } finally {
           setTutorLoading(false);
       }
@@ -338,7 +334,7 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
                                       {msg.role === 'ai' ? <BrainCircuit size={16}/> : <div className="text-xs font-bold">VC</div>}
                                   </div>
                                   <div className={`p-4 rounded-2xl max-w-[85%] text-sm ${msg.role === 'ai' ? 'bg-slate-900 border border-white/10' : 'bg-indigo-600/20 border border-indigo-500/30 text-indigo-100'}`}>
-                                      {msg.role === 'ai' ? <TutorMarkdown text={msg.content} /> : msg.content}
+                                      {msg.role === 'ai' ? <ProfessionalMarkdown text={msg.content} /> : msg.content}
                                   </div>
                               </div>
                           ))
@@ -374,45 +370,6 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
                       <p className="text-center text-[10px] text-slate-500 mt-2">NeuroTutor tem acesso total ao contexto desta aula.</p>
                   </div>
               </div>
-
-              {/* Legacy AI Summary Modal (Only for 'Finish Lesson') */}
-              {showAiModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
-                      <div className="bg-slate-900 border border-indigo-500/30 rounded-2xl p-8 max-w-lg w-full relative shadow-2xl">
-                          <button onClick={() => setShowAiModal(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20}/></button>
-                          
-                          <div className="text-center mb-6">
-                              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-400">
-                                  <CheckCircle size={32} />
-                              </div>
-                              <h3 className="text-2xl font-bold text-white">Aula Concluída!</h3>
-                              <p className="text-slate-400">Você entendeu bem o conteúdo?</p>
-                          </div>
-
-                          {!aiSummary ? (
-                              <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                      <button onClick={() => setShowAiModal(false)} className="p-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold transition-colors">
-                                          Sim, entendi!
-                                      </button>
-                                      <button onClick={generateSummary} disabled={aiLoading} className="p-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-colors flex flex-col items-center justify-center gap-1 relative overflow-hidden">
-                                          {aiLoading ? <Loader2 className="animate-spin" size={20}/> : <BrainCircuit size={24} />}
-                                          <span className="text-xs">Gerar Resumo IA</span>
-                                      </button>
-                                  </div>
-                              </div>
-                          ) : (
-                              <div className="bg-slate-800/50 p-4 rounded-xl border border-white/5 animate-in slide-in-from-bottom-2">
-                                  <h4 className="text-indigo-400 font-bold mb-2 flex items-center gap-2"><BrainCircuit size={16}/> Resumo Rápido</h4>
-                                  <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{aiSummary}</p>
-                                  <button onClick={() => setShowAiModal(false)} className="mt-4 w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold">
-                                      Fechar
-                                  </button>
-                              </div>
-                          )}
-                      </div>
-                  </div>
-              )}
 
               <button onClick={() => setSelectedLesson(null)} className="flex items-center gap-2 text-slate-400 hover:text-white mb-2 transition-colors group">
                   <div className="p-2 rounded-full bg-slate-800 group-hover:bg-slate-700 transition-colors">
@@ -582,122 +539,6 @@ const Classes: React.FC<ClassesProps> = ({ onNavigate, user, onUpdateUser }) => 
                           </div>
                       </div>
                   </div>
-              </div>
-          </div>
-      );
-  }
-
-  // --- LESSON LIST (BY TOPIC) VIEW ---
-  if (selectedTopic && selectedSubject) {
-      const lessons = topicsWithLessons[selectedTopic] || [];
-      return (
-          <div className="space-y-8 animate-in slide-in-from-right max-w-6xl mx-auto">
-             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-white/5">
-                  <div className="flex items-center gap-4">
-                    <button onClick={() => setSelectedTopic(null)} className="p-3 bg-slate-900 hover:bg-slate-800 rounded-full transition-colors border border-white/5">
-                        <ArrowLeft size={24} className="text-slate-300" />
-                    </button>
-                    <div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1">
-                            <span>{selectedSubject.name}</span>
-                            <ChevronRight size={12} />
-                            <span>Módulo</span>
-                        </div>
-                        <h2 className="text-3xl font-bold text-white">{selectedTopic}</h2>
-                    </div>
-                  </div>
-                  <div className="bg-slate-900/50 px-4 py-2 rounded-xl border border-white/5 text-sm text-slate-400 font-medium">
-                      {lessons.length} itens disponíveis
-                  </div>
-              </div>
-
-              {/* List of Lessons */}
-              <div className="grid grid-cols-1 gap-4">
-                  {lessons.map((lesson, idx) => {
-                      const isBlock = lesson.type === 'exercise_block';
-                      const isDone = lesson.id && completedLessons.has(lesson.id);
-
-                      return (
-                      <div 
-                        key={idx} 
-                        onClick={() => handleLessonClick(lesson)}
-                        className={`group glass-card p-4 rounded-2xl flex flex-col md:flex-row items-center gap-6 transition-all cursor-pointer border relative overflow-hidden ${
-                            isBlock 
-                            ? 'bg-emerald-900/10 border-emerald-500/20 hover:border-emerald-500/40' 
-                            : isDone
-                                ? 'bg-slate-900/40 border-emerald-500/20 hover:bg-slate-800/60'
-                                : 'border-white/5 hover:border-indigo-500/40 hover:bg-slate-900/80'
-                        }`}
-                      >
-                          {/* Hover Glow */}
-                          <div className={`absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isBlock ? 'from-emerald-900/0 to-emerald-900/10' : 'from-indigo-900/0 to-indigo-900/10'}`} />
-
-                          {/* Completed Badge */}
-                          {isDone && (
-                              <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-lg z-10">
-                                  <CheckCircle size={10} /> Concluída
-                              </div>
-                          )}
-
-                          {/* Fake Thumbnail / Icon Area */}
-                          <div className={`w-full md:w-48 h-32 md:h-28 flex-shrink-0 rounded-xl relative overflow-hidden border transition-colors ${isBlock ? 'bg-emerald-950 border-emerald-500/20' : 'bg-slate-950 border-white/5 group-hover:border-indigo-500/30'}`}>
-                               {/* Abstract Pattern */}
-                               <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-slate-950 to-slate-950" />
-                               
-                               <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className={`w-12 h-12 rounded-full backdrop-blur-sm flex items-center justify-center transition-all shadow-xl group-hover:scale-110 ${isBlock ? 'bg-emerald-900/80 text-emerald-400 group-hover:text-white' : 'bg-slate-900/80 text-indigo-400 group-hover:text-white'}`}>
-                                        {isDone ? <CheckCircle size={24} className="text-emerald-500" /> : isBlock ? <FileText size={20}/> : <Play size={20} fill="currentColor" className="ml-1" />}
-                                    </div>
-                               </div>
-                               
-                               {/* Duration Badge on Thumbnail */}
-                               {!isBlock && (
-                                   <div className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-white flex items-center gap-1 border border-white/10">
-                                       <Clock size={10} /> {lesson.duration || '00:00'}
-                                   </div>
-                               )}
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 w-full md:w-auto z-10">
-                              <h4 className={`font-bold text-lg mb-2 transition-colors line-clamp-2 ${isBlock ? 'text-emerald-200 group-hover:text-emerald-100' : isDone ? 'text-emerald-100 group-hover:text-emerald-50' : 'text-white group-hover:text-indigo-300'}`}>
-                                  {lesson.title}
-                              </h4>
-                              <p className="text-slate-400 text-sm line-clamp-2">
-                                  {isBlock ? 'Pratique o conteúdo com questões selecionadas do Banco de Questões.' : `Nesta aula, abordaremos os conceitos fundamentais de ${selectedTopic.toLowerCase()}.`}
-                              </p>
-                              
-                              <div className="flex flex-wrap items-center gap-4 mt-4">
-                                  {isBlock ? (
-                                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded-md border border-emerald-500/20">
-                                          <Target size={12} /> Exercícios Práticos
-                                      </div>
-                                  ) : (
-                                      <>
-                                        <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-900 px-2 py-1 rounded-md">
-                                            <Video size={12} /> Aula Gravada
-                                        </div>
-                                        {lesson.materials && lesson.materials.length > 0 && (
-                                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-900 px-2 py-1 rounded-md">
-                                                <FileText size={12} /> {lesson.materials.length} Materiais
-                                            </div>
-                                        )}
-                                      </>
-                                  )}
-                                  {lesson.tag && (
-                                      <div className={`flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded border uppercase bg-${lesson.tag.color}-500/20 text-${lesson.tag.color}-400 border-${lesson.tag.color}-500/30`}>
-                                          {lesson.tag.text}
-                                      </div>
-                                  )}
-                              </div>
-                          </div>
-
-                          {/* Action Arrow */}
-                          <div className={`hidden md:flex p-4 rounded-full transition-all transform group-hover:translate-x-2 ${isBlock ? 'bg-emerald-900/20 text-emerald-500 group-hover:bg-emerald-600 group-hover:text-white' : 'bg-slate-900/50 text-slate-500 group-hover:bg-indigo-600 group-hover:text-white'}`}>
-                              <ChevronRight size={24} />
-                          </div>
-                      </div>
-                  )})}
               </div>
           </div>
       );
